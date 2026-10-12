@@ -21,6 +21,6 @@ EVENT_TO_TOTAL_BASES: Final[dict[str, int]] = {
     "single": 1,
     "double": 2,
     "triple": 3,
-    "home run": 4,
+    "home_run": 4,
 }
 PROCESSED_DATA_DIRECTORY: Final[Path] = Path("ProcessedData")

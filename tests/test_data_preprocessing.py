@@ -27,5 +27,5 @@ def test_total_base_mapping() -> None:
         "single": 1,
         "double": 2,
         "triple": 3,
-        "home run": 4,
+        "home_run": 4,
     }

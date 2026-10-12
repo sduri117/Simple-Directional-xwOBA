@@ -81,11 +81,10 @@ The pipeline will add three columns:
 
 - `hit_direction`: the lowercase direction represented by the input filename;
   one of `pull`, `straightaway`, or `opposite`.
-- `simplified_events`: preserves source values `single`, `double`, and `triple`,
-  converts the source value `home_run` to `home run`, and maps every other event
-  to `out`.
+- `simplified_events`: preserves source values `single`, `double`, `triple`, and
+  `home_run`, and maps every other event to `out`.
 - `total_bases`: maps `out` to 0, `single` to 1, `double` to 2, `triple` to 3,
-  and `home run` to 4.
+  and `home_run` to 4.
 
 The final files will be written without an index to `ProcessedData` as:
 
