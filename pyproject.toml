@@ -1,0 +1,41 @@
+[project]
+name = "simple-directional-xwoba"
+version = "0.1.0"
+description = "Explore Simple Directional expected weighted on-base average."
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "httpx",
+    "polars",
+]
+
+[dependency-groups]
+dev = [
+    "black",
+    "mypy",
+    "pytest",
+    "ruff",
+]
+
+[tool.black]
+line-length = 88
+target-version = ["py313"]
+
+[tool.mypy]
+files = ["Stage_1-Preprocessing", "tests"]
+mypy_path = "Stage_1-Preprocessing"
+python_version = "3.13"
+strict = true
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+pythonpath = ["Stage_1-Preprocessing"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["B", "E", "F", "I", "UP"]
+
