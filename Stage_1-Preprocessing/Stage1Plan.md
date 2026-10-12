@@ -1,5 +1,7 @@
 # Stage 1: Data Download and Preprocessing
 
+**Status:** Complete as of October 12, 2026.
+
 ## Goal
 
 Create a reproducible pipeline that downloads complete regular-season batted-ball
@@ -178,4 +180,73 @@ After every implementation change, run the tools in this order:
 4. `uv run pytest`
 
 All four commands must pass before a milestone is presented for review.
+
+## Completed implementation
+
+The downloader generated the full matrix of 90 monthly and directional files
+in `RawData2`. The preprocessing command requires all 18 expected inputs for a
+requested year, processes years serially in deterministic month-then-direction
+order, and refuses to replace an existing annual file unless `--overwrite` is
+specified.
+
+The annual CSV is first written to a `.part` file. Before that temporary file is
+renamed, the pipeline reopens it and validates its column order, inferred data
+types, row count, null count, dates, year, category domains, simplified-event
+mapping, and total-bases mapping. This preserves an existing output if writing
+or validation fails.
+
+Generate every annual dataset from the repository root with:
+
+```text
+uv run python Stage_1-Preprocessing/data_preprocessing.py
+```
+
+Use repeated `--year` options to generate selected years. Use `--overwrite`
+only when intentionally regenerating existing annual files.
+
+## Final validation results
+
+All five annual files were generated in `ProcessedData` and independently
+reconciled against the 90 monthly inputs. Only rows missing at least one of the
+six required values were removed.
+
+| Year | Input files | Raw rows | Removed rows | Final rows | Date range |
+| --- | ---: | ---: | ---: | ---: | --- |
+| 2022 | 18 | 124,266 | 543 | 123,723 | 2022-04-07 to 2022-10-05 |
+| 2023 | 18 | 124,233 | 359 | 123,874 | 2023-03-30 to 2023-10-01 |
+| 2024 | 18 | 124,201 | 375 | 123,826 | 2024-03-20 to 2024-09-30 |
+| 2025 | 18 | 124,887 | 448 | 124,439 | 2025-03-18 to 2025-09-28 |
+| 2026 | 18 | 124,611 | 514 | 124,097 | 2026-03-25 to 2026-09-27 |
+| **Total** | **90** | **622,198** | **2,239** | **619,959** | — |
+
+Direction counts in the final files were:
+
+| Year | Opposite | Pull | Straightaway |
+| --- | ---: | ---: | ---: |
+| 2022 | 31,063 | 46,855 | 45,805 |
+| 2023 | 30,678 | 48,121 | 45,075 |
+| 2024 | 30,502 | 47,859 | 45,465 |
+| 2025 | 30,449 | 48,693 | 45,297 |
+| 2026 | 29,874 | 48,983 | 45,240 |
+
+Simplified-event counts in the final files were:
+
+| Year | Out | Single | Double | Triple | Home run |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 2022 | 84,183 | 25,759 | 7,926 | 642 | 5,213 |
+| 2023 | 83,115 | 25,958 | 8,224 | 711 | 5,866 |
+| 2024 | 84,066 | 25,843 | 7,771 | 696 | 5,450 |
+| 2025 | 84,371 | 26,053 | 7,740 | 627 | 5,648 |
+| 2026 | 84,337 | 26,031 | 7,488 | 671 | 5,570 |
+
+Every output has the specified nine columns in the specified order. Inferred
+CSV types are strings for dates, names, event fields, and direction fields;
+64-bit integers for `batter` and `total_bases`; and 64-bit floats for
+`launch_speed` and `launch_angle`. Validation found zero nulls, malformed dates,
+unexpected directions, unexpected simplified events, incorrect event mappings,
+or incorrect total-base mappings. The pre-existing FanGraphs files were not
+modified.
+
+The final quality gate completed with Black, Ruff, and strict mypy passing, and
+all 31 pytest tests passing on Python 3.13.9.
 

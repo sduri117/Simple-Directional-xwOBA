@@ -58,6 +58,12 @@ CSV_SCHEMA: Final[dict[str, type[pl.DataType]]] = {
     "launch_speed": pl.Float64,
     "launch_angle": pl.Float64,
 }
+OUTPUT_CSV_SCHEMA: Final[dict[str, type[pl.DataType]]] = {
+    **CSV_SCHEMA,
+    "hit_direction": pl.String,
+    "simplified_events": pl.String,
+    "total_bases": pl.Int64,
+}
 
 
 class PreprocessingError(Exception):
@@ -92,6 +98,98 @@ class YearPreprocessingSummary:
     output_rows: int
     removed_rows: int
     output_path: Path
+
+
+def validate_annual_output(path: Path, year: int, expected_rows: int) -> None:
+    """Validate a written annual CSV before it becomes the final output."""
+    try:
+        frame = pl.read_csv(path)
+    except (OSError, pl.exceptions.PolarsError) as error:
+        raise PreprocessingError(f"Could not validate {path}: {error}") from error
+
+    if frame.columns != list(OUTPUT_COLUMNS):
+        raise PreprocessingError(
+            f"{path} has columns {frame.columns}, expected {list(OUTPUT_COLUMNS)}"
+        )
+    if frame.height != expected_rows:
+        raise PreprocessingError(
+            f"{path} has {frame.height:,} rows, expected {expected_rows:,}"
+        )
+
+    unexpected_types = {
+        column: (frame.schema[column], expected_type)
+        for column, expected_type in OUTPUT_CSV_SCHEMA.items()
+        if frame.schema[column] != expected_type
+    }
+    if unexpected_types:
+        raise PreprocessingError(
+            f"{path} has unexpected column types: {unexpected_types}"
+        )
+
+    null_counts = {
+        column: count
+        for column, count in zip(
+            frame.columns,
+            frame.null_count().row(0),
+            strict=True,
+        )
+        if count
+    }
+    if null_counts:
+        raise PreprocessingError(f"{path} contains null values: {null_counts}")
+
+    parsed_dates = frame.get_column("game_date").str.to_date(strict=False)
+    if parsed_dates.null_count():
+        raise PreprocessingError(f"{path} contains malformed game_date values")
+    actual_years = set(parsed_dates.dt.year().unique().to_list())
+    if actual_years != {year}:
+        raise PreprocessingError(
+            f"{path} contains years {sorted(actual_years)}, expected {year}"
+        )
+
+    actual_directions = set(frame.get_column("hit_direction").unique().to_list())
+    invalid_directions = actual_directions - set(DIRECTIONS)
+    if invalid_directions:
+        raise PreprocessingError(
+            f"{path} contains invalid hit_direction values: "
+            f"{sorted(invalid_directions)}"
+        )
+
+    valid_simplified_events = set(EVENT_TO_TOTAL_BASES)
+    actual_simplified_events = set(
+        frame.get_column("simplified_events").unique().to_list()
+    )
+    invalid_simplified_events = actual_simplified_events - valid_simplified_events
+    if invalid_simplified_events:
+        raise PreprocessingError(
+            f"{path} contains invalid simplified_events values: "
+            f"{sorted(invalid_simplified_events)}"
+        )
+
+    expected_simplified_events = (
+        pl.when(pl.col("events").is_in(HIT_EVENTS))
+        .then(pl.col("events"))
+        .otherwise(pl.lit("out"))
+    )
+    invalid_event_mappings = frame.filter(
+        pl.col("simplified_events") != expected_simplified_events
+    ).height
+    if invalid_event_mappings:
+        raise PreprocessingError(
+            f"{path} has {invalid_event_mappings:,} invalid event mapping(s)"
+        )
+
+    expected_total_bases = pl.col("simplified_events").replace_strict(
+        EVENT_TO_TOTAL_BASES,
+        return_dtype=pl.Int64,
+    )
+    invalid_total_bases = frame.filter(
+        pl.col("total_bases") != expected_total_bases
+    ).height
+    if invalid_total_bases:
+        raise PreprocessingError(
+            f"{path} has {invalid_total_bases:,} invalid total_bases mapping(s)"
+        )
 
 
 def expected_input_files(input_directory: Path, year: int) -> list[MonthlyDataFile]:
@@ -186,6 +284,7 @@ def preprocess_year(
     temporary_path = output_path.with_suffix(f"{output_path.suffix}.part")
     try:
         annual_frame.write_csv(temporary_path)
+        validate_annual_output(temporary_path, year, annual_frame.height)
         temporary_path.replace(output_path)
     except Exception:
         temporary_path.unlink(missing_ok=True)

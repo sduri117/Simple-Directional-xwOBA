@@ -21,6 +21,7 @@ from data_preprocessing import (
     main,
     preprocess_year,
     transform_monthly_file,
+    validate_annual_output,
 )
 
 CSV_COLUMNS = REQUIRED_COLUMNS + ("unused_column",)
@@ -250,6 +251,20 @@ def test_preprocess_year_requires_overwrite_for_existing_output(
         overwrite=True,
     )
     assert summary.output_rows == 18
+
+
+def test_validate_annual_output_rejects_incorrect_mapping(tmp_path: Path) -> None:
+    input_directory = tmp_path / "raw"
+    output_directory = tmp_path / "processed"
+    populate_year(input_directory, 2025)
+    summary = preprocess_year(input_directory, output_directory, 2025)
+    frame = pl.read_csv(summary.output_path).with_columns(
+        pl.lit(4).alias("total_bases")
+    )
+    frame.write_csv(summary.output_path)
+
+    with pytest.raises(PreprocessingError, match="invalid total_bases mapping"):
+        validate_annual_output(summary.output_path, 2025, expected_rows=18)
 
 
 def test_main_returns_error_for_incomplete_inventory(
