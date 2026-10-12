@@ -34,7 +34,7 @@ def csv_bytes(rows: Iterable[Iterable[object]]) -> bytes:
 
 
 def valid_row(game_date: str = "2025-03-29") -> tuple[object, ...]:
-    return (game_date, "Judge, Aaron", 592450, "home_run", 107.3, 28)
+    return (game_date, "Judge, Aaron", 592450, "home_run", 107.3, 28, 1.82)
 
 
 def test_download_dimensions_cover_the_stage_scope() -> None:
@@ -144,6 +144,7 @@ def test_validate_csv_allows_missing_analysis_values(tmp_path: Path) -> None:
         "field_out",
         None,
         28,
+        0.12,
     )
     path.write_bytes(csv_bytes([row_with_missing_launch_speed]))
 

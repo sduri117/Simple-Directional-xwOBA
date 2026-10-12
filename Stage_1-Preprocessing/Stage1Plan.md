@@ -58,7 +58,7 @@ will be renamed to its final CSV filename only after it passes validation. Valid
 existing files will be skipped by default to support safe resumption, while an
 explicit command-line option will permit replacement.
 
-Each downloaded CSV must be nonempty and contain all six columns needed by the
+Each downloaded CSV must be nonempty and contain all seven columns needed by the
 preprocessing pipeline. The downloader will also validate that the data matches
 the requested year and month bucket. Retries and bounded request timeouts will
 handle transient network failures.
@@ -74,8 +74,10 @@ only these source columns, and preserve their order:
 4. `events`
 5. `launch_speed`
 6. `launch_angle`
+7. `estimated_woba_using_speedangle`, renamed to `xwOBA-MLB` in the condensed
+   output
 
-After selecting these six columns, any row with a missing value in at least one
+After selecting these seven columns, any row with a missing value in at least one
 of them will be removed. Missing values in unneeded Baseball Savant columns do
 not affect whether a row is retained.
 
@@ -95,7 +97,8 @@ The final files will be written without an index to `ProcessedData` as:
 ```
 
 There will be one final file for every year from 2022 through 2026. Each file
-will contain the six source columns followed by the three derived columns.
+will contain the seven retained source columns, with the Statcast column renamed
+to `xwOBA-MLB`, followed by the three derived columns.
 
 ## Technology
 
@@ -208,44 +211,46 @@ only when intentionally regenerating existing annual files.
 
 All five annual files were generated in `ProcessedData` and independently
 reconciled against the 90 monthly inputs. Only rows missing at least one of the
-six required values were removed.
+seven required values were removed.
 
 | Year | Input files | Raw rows | Removed rows | Final rows | Date range |
 | --- | ---: | ---: | ---: | ---: | --- |
-| 2022 | 18 | 124,266 | 543 | 123,723 | 2022-04-07 to 2022-10-05 |
-| 2023 | 18 | 124,233 | 359 | 123,874 | 2023-03-30 to 2023-10-01 |
-| 2024 | 18 | 124,201 | 375 | 123,826 | 2024-03-20 to 2024-09-30 |
-| 2025 | 18 | 124,887 | 448 | 124,439 | 2025-03-18 to 2025-09-28 |
-| 2026 | 18 | 124,611 | 514 | 124,097 | 2026-03-25 to 2026-09-27 |
-| **Total** | **90** | **622,198** | **2,239** | **619,959** | — |
+| 2022 | 18 | 124,266 | 935 | 123,331 | 2022-04-07 to 2022-10-05 |
+| 2023 | 18 | 124,233 | 784 | 123,449 | 2023-03-30 to 2023-10-01 |
+| 2024 | 18 | 124,201 | 820 | 123,381 | 2024-03-20 to 2024-09-30 |
+| 2025 | 18 | 124,887 | 997 | 123,890 | 2025-03-18 to 2025-09-28 |
+| 2026 | 18 | 124,611 | 1,230 | 123,381 | 2026-03-25 to 2026-09-27 |
+| **Total** | **90** | **622,198** | **4,766** | **617,432** | — |
 
 Direction counts in the final files were:
 
 | Year | Opposite | Pull | Straightaway |
 | --- | ---: | ---: | ---: |
-| 2022 | 31,063 | 46,855 | 45,805 |
-| 2023 | 30,678 | 48,121 | 45,075 |
-| 2024 | 30,502 | 47,859 | 45,465 |
-| 2025 | 30,449 | 48,693 | 45,297 |
-| 2026 | 29,874 | 48,983 | 45,240 |
+| 2022 | 30,914 | 46,763 | 45,654 |
+| 2023 | 30,534 | 47,981 | 44,934 |
+| 2024 | 30,344 | 47,724 | 45,313 |
+| 2025 | 30,259 | 48,532 | 45,099 |
+| 2026 | 29,601 | 48,774 | 45,006 |
 
 Simplified-event counts in the final files were:
 
 | Year | Out | Single | Double | Triple | Home run |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| 2022 | 84,183 | 25,759 | 7,926 | 642 | 5,213 |
-| 2023 | 83,115 | 25,958 | 8,224 | 711 | 5,866 |
-| 2024 | 84,066 | 25,843 | 7,771 | 696 | 5,450 |
-| 2025 | 84,371 | 26,053 | 7,740 | 627 | 5,648 |
-| 2026 | 84,337 | 26,031 | 7,488 | 671 | 5,570 |
+| 2022 | 83,792 | 25,758 | 7,926 | 642 | 5,213 |
+| 2023 | 82,690 | 25,958 | 8,224 | 711 | 5,866 |
+| 2024 | 83,621 | 25,843 | 7,771 | 696 | 5,450 |
+| 2025 | 83,822 | 26,053 | 7,740 | 627 | 5,648 |
+| 2026 | 83,637 | 26,021 | 7,487 | 671 | 5,565 |
 
-Every output has the specified nine columns in the specified order. Inferred
+Every output has the specified ten columns in the specified order. Inferred
 CSV types are strings for dates, names, event fields, and direction fields;
 64-bit integers for `batter` and `total_bases`; and 64-bit floats for
-`launch_speed` and `launch_angle`. Validation found zero nulls, malformed dates,
-unexpected directions, unexpected simplified events, incorrect event mappings,
-or incorrect total-base mappings. The pre-existing FanGraphs files were not
-modified.
+`launch_speed`, `launch_angle`, and `xwOBA-MLB`. An independent row-for-row
+comparison confirmed that every `xwOBA-MLB` value exactly matches its retained
+`estimated_woba_using_speedangle` source value. Validation found zero nulls,
+malformed dates, unexpected directions, unexpected simplified events,
+incorrect event mappings, or incorrect total-base mappings. The pre-existing
+FanGraphs files were not modified.
 
 The final quality gate completed with Black, Ruff, and strict mypy passing, and
 all 31 pytest tests passing on Python 3.13.9.

@@ -20,6 +20,8 @@ MONTH_SLUGS: Final[tuple[str, ...]] = (
     "sep-oct",
 )
 DIRECTIONS: Final[tuple[str, ...]] = ("pull", "straightaway", "opposite")
+XWOBA_MLB_SOURCE_COLUMN: Final[str] = "estimated_woba_using_speedangle"
+XWOBA_MLB_OUTPUT_COLUMN: Final[str] = "xwOBA-MLB"
 REQUIRED_COLUMNS: Final[tuple[str, ...]] = (
     "game_date",
     "player_name",
@@ -27,13 +29,18 @@ REQUIRED_COLUMNS: Final[tuple[str, ...]] = (
     "events",
     "launch_speed",
     "launch_angle",
+    XWOBA_MLB_SOURCE_COLUMN,
 )
 DERIVED_COLUMNS: Final[tuple[str, ...]] = (
     "hit_direction",
     "simplified_events",
     "total_bases",
 )
-OUTPUT_COLUMNS: Final[tuple[str, ...]] = REQUIRED_COLUMNS + DERIVED_COLUMNS
+OUTPUT_COLUMNS: Final[tuple[str, ...]] = (
+    *REQUIRED_COLUMNS[:-1],
+    XWOBA_MLB_OUTPUT_COLUMN,
+    *DERIVED_COLUMNS,
+)
 HIT_EVENTS: Final[tuple[str, ...]] = (
     "single",
     "double",
@@ -57,9 +64,11 @@ CSV_SCHEMA: Final[dict[str, type[pl.DataType]]] = {
     "events": pl.String,
     "launch_speed": pl.Float64,
     "launch_angle": pl.Float64,
+    XWOBA_MLB_SOURCE_COLUMN: pl.Float64,
 }
 OUTPUT_CSV_SCHEMA: Final[dict[str, type[pl.DataType]]] = {
-    **CSV_SCHEMA,
+    **{column: CSV_SCHEMA[column] for column in REQUIRED_COLUMNS[:-1]},
+    XWOBA_MLB_OUTPUT_COLUMN: pl.Float64,
     "hit_direction": pl.String,
     "simplified_events": pl.String,
     "total_bases": pl.Int64,
@@ -137,6 +146,15 @@ def validate_annual_output(path: Path, year: int, expected_rows: int) -> None:
     }
     if null_counts:
         raise PreprocessingError(f"{path} contains null values: {null_counts}")
+
+    nonfinite_xwoba_values = frame.filter(
+        ~pl.col(XWOBA_MLB_OUTPUT_COLUMN).is_finite()
+    ).height
+    if nonfinite_xwoba_values:
+        raise PreprocessingError(
+            f"{path} has {nonfinite_xwoba_values:,} non-finite "
+            f"{XWOBA_MLB_OUTPUT_COLUMN} value(s)"
+        )
 
     parsed_dates = frame.get_column("game_date").str.to_date(strict=False)
     if parsed_dates.null_count():
@@ -237,7 +255,9 @@ def transform_monthly_file(data_file: MonthlyDataFile) -> tuple[pl.DataFrame, in
     frame = frame.with_columns(
         pl.col("launch_speed").fill_nan(None),
         pl.col("launch_angle").fill_nan(None),
+        pl.col(XWOBA_MLB_SOURCE_COLUMN).fill_nan(None),
     ).drop_nulls(list(REQUIRED_COLUMNS))
+    frame = frame.rename({XWOBA_MLB_SOURCE_COLUMN: XWOBA_MLB_OUTPUT_COLUMN})
 
     simplified_events = (
         pl.when(pl.col("events").is_in(HIT_EVENTS))

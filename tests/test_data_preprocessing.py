@@ -12,6 +12,8 @@ from data_preprocessing import (
     MONTH_SLUGS,
     OUTPUT_COLUMNS,
     REQUIRED_COLUMNS,
+    XWOBA_MLB_OUTPUT_COLUMN,
+    XWOBA_MLB_SOURCE_COLUMN,
     InputInventoryError,
     MonthlyDataFile,
     OutputExistsError,
@@ -35,6 +37,7 @@ def row(
     events: object = "single",
     launch_speed: object = 100.1,
     launch_angle: object = 20.0,
+    estimated_woba_using_speedangle: object = 0.9,
     unused_column: object = "unused",
 ) -> dict[str, object]:
     return {
@@ -44,6 +47,7 @@ def row(
         "events": events,
         "launch_speed": launch_speed,
         "launch_angle": launch_angle,
+        XWOBA_MLB_SOURCE_COLUMN: estimated_woba_using_speedangle,
         "unused_column": unused_column,
     }
 
@@ -78,13 +82,23 @@ def test_output_column_contract() -> None:
         "events",
         "launch_speed",
         "launch_angle",
+        "estimated_woba_using_speedangle",
     )
     assert DERIVED_COLUMNS == (
         "hit_direction",
         "simplified_events",
         "total_bases",
     )
-    assert OUTPUT_COLUMNS == REQUIRED_COLUMNS + DERIVED_COLUMNS
+    assert OUTPUT_COLUMNS == (
+        "game_date",
+        "player_name",
+        "batter",
+        "events",
+        "launch_speed",
+        "launch_angle",
+        "xwOBA-MLB",
+        *DERIVED_COLUMNS,
+    )
 
 
 def test_total_base_mapping() -> None:
@@ -142,6 +156,8 @@ def test_transform_monthly_file_maps_events_and_direction(tmp_path: Path) -> Non
     assert input_rows == len(events)
     assert result.columns == list(OUTPUT_COLUMNS)
     assert result["events"].to_list() == events
+    assert result[XWOBA_MLB_OUTPUT_COLUMN].to_list() == [0.9] * len(events)
+    assert XWOBA_MLB_SOURCE_COLUMN not in result.columns
     assert result["hit_direction"].to_list() == ["opposite"] * len(events)
     assert result["simplified_events"].to_list() == [
         "out",
@@ -166,15 +182,17 @@ def test_transform_monthly_file_removes_only_missing_required_values(
         row(events=""),
         row(launch_speed=""),
         row(launch_angle=""),
+        row(estimated_woba_using_speedangle=""),
         row(launch_speed="NaN"),
         row(launch_angle="NaN"),
+        row(estimated_woba_using_speedangle="NaN"),
     ]
     write_csv(input_path, [row(unused_column=""), *missing_required_rows])
     data_file = MonthlyDataFile(2025, "jun", "pull", input_path)
 
     result, input_rows = transform_monthly_file(data_file)
 
-    assert input_rows == 9
+    assert input_rows == 11
     assert result.height == 1
     assert result["hit_direction"].item() == "pull"
     assert "unused_column" not in result.columns
