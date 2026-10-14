@@ -25,6 +25,7 @@ from experiment_config import (
     TOTAL_CANDIDATE_COUNT,
     TRAINING_YEARS,
     WEIGHT_OPTIONS,
+    XWOBA_LOCAL_COLUMN,
     ModelingDataError,
     annual_batted_ball_path,
     generate_knn_configs,
@@ -56,6 +57,7 @@ def test_reproducibility_and_modeling_contract() -> None:
     assert FEATURE_COLUMNS == ("launch_speed", "launch_angle")
     assert TARGET_COLUMN == "total_bases"
     assert CLASS_LABELS == (0, 1, 2, 3, 4)
+    assert XWOBA_LOCAL_COLUMN == "xwOBA-local"
     assert MODELING_REQUIRED_COLUMNS == (
         "game_date",
         "launch_speed",
@@ -107,7 +109,9 @@ def test_canonical_paths_preserve_agreed_names() -> None:
     assert annual_batted_ball_path(2022).as_posix() == (
         "ProcessedData/2022_all_BBE.csv"
     )
-    assert MODEL_SELECTION_RESULTS_PATH.name == "ModelSelectionResuts.CSV"
+    assert MODEL_SELECTION_RESULTS_PATH.as_posix() == (
+        "Stage_2-xwOBA-local/ModelSelectionResults.CSV"
+    )
     assert FINAL_MODEL_PATH.as_posix() == ("ModelArtifacts/xwoba_knn_2022_2024.joblib")
     assert FINAL_MODEL_METADATA_PATH.as_posix() == (
         "ModelArtifacts/xwoba_knn_2022_2024.metadata.json"

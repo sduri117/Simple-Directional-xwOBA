@@ -21,6 +21,31 @@ FEATURE_COLUMNS: Final[tuple[str, ...]] = ("launch_speed", "launch_angle")
 TARGET_COLUMN: Final[str] = "total_bases"
 DATE_COLUMN: Final[str] = "game_date"
 CLASS_LABELS: Final[tuple[int, ...]] = (0, 1, 2, 3, 4)
+XWOBA_LOCAL_COLUMN: Final[str] = "xwOBA-local"
+BATTED_BALL_COLUMNS: Final[tuple[str, ...]] = (
+    "game_date",
+    "player_name",
+    "batter",
+    "events",
+    "launch_speed",
+    "launch_angle",
+    "xwOBA-MLB",
+    "hit_direction",
+    "simplified_events",
+    "total_bases",
+)
+BATTED_BALL_SCHEMA: Final[dict[str, type[pl.DataType]]] = {
+    "game_date": pl.String,
+    "player_name": pl.String,
+    "batter": pl.Int64,
+    "events": pl.String,
+    "launch_speed": pl.Float64,
+    "launch_angle": pl.Float64,
+    "xwOBA-MLB": pl.Float64,
+    "hit_direction": pl.String,
+    "simplified_events": pl.String,
+    "total_bases": pl.Int64,
+}
 MODELING_REQUIRED_COLUMNS: Final[tuple[str, ...]] = (
     DATE_COLUMN,
     *FEATURE_COLUMNS,
@@ -54,7 +79,9 @@ P_OPTIONS: Final[tuple[DistancePower, ...]] = (1, 2)
 
 PROCESSED_DATA_DIRECTORY: Final[Path] = Path("ProcessedData")
 CALCULATED_XWOBA_DIRECTORY: Final[Path] = Path("Calculated-xwOBAs")
-MODEL_SELECTION_RESULTS_PATH: Final[Path] = Path("ModelSelectionResuts.CSV")
+MODEL_SELECTION_RESULTS_PATH: Final[Path] = (
+    Path("Stage_2-xwOBA-local") / "ModelSelectionResults.CSV"
+)
 MODEL_ARTIFACT_DIRECTORY: Final[Path] = Path("ModelArtifacts")
 FINAL_MODEL_PATH: Final[Path] = MODEL_ARTIFACT_DIRECTORY / "xwoba_knn_2022_2024.joblib"
 FINAL_MODEL_METADATA_PATH: Final[Path] = (
@@ -91,6 +118,7 @@ SELECTED_MODEL_CONFIG: Final[KNNConfig] = KNNConfig(
     p=1,
 )
 SELECTED_NEIGHBOR_ALGORITHM: Final[str] = "ball_tree"
+FINAL_TRAINING_ROW_COUNT: Final[int] = 370_161
 
 
 def generate_knn_configs() -> tuple[KNNConfig, ...]:
@@ -116,6 +144,13 @@ def annual_batted_ball_path(year: int) -> Path:
     if year not in ALL_STAGE_2_YEARS:
         raise ValueError(f"Unsupported Stage 2 year: {year}")
     return PROCESSED_DATA_DIRECTORY / f"{year}_all_BBE.csv"
+
+
+def calculated_batted_ball_path(year: int) -> Path:
+    """Return the canonical calculated xwOBA output path for a prediction year."""
+    if year not in PREDICTION_YEARS:
+        raise ValueError(f"Unsupported prediction year: {year}")
+    return CALCULATED_XWOBA_DIRECTORY / (f"{year}_all_BBE_with_calculated_xwOBAs.csv")
 
 
 def validate_modeling_frame(frame: pl.DataFrame, expected_year: int) -> None:

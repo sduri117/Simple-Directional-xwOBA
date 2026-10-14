@@ -1,6 +1,6 @@
 # Stage 2: Model Selection and Calculated xwOBA
 
-**Status:** Milestone 4 complete and awaiting review as of October 14, 2026.
+**Status:** Milestone 5 complete and awaiting review as of October 14, 2026.
 
 ## Goal
 
@@ -132,7 +132,7 @@ Each validation design will report:
 - Accuracy, using the class with the greatest predicted probability.
 
 The baseline and every KNN candidate will be written to
-`ModelSelectionResuts.CSV`, preserving the requested filename. Its columns will
+`Stage_2-xwOBA-local/ModelSelectionResults.CSV`. Its columns will
 include model type, feature scaling, every varied hyperparameter, and log loss,
 Brier score, and accuracy for both cross-validation and chronological
 validation. Numeric results will be stored at full practical precision.
@@ -158,7 +158,7 @@ sample of probabilities before accepting it.
 
 ## Milestone 3 validation results
 
-The completed `ModelSelectionResuts.CSV` contains 97 unique rows: one baseline
+The completed `ModelSelectionResults.CSV` contains 97 unique rows: one baseline
 and the complete Cartesian product of the three scaling choices, eight approved
 neighbor counts, two weighting choices, and two distance powers. All 96 KNN
 rows used the ball-tree search algorithm selected by the timing and equivalence
@@ -229,6 +229,20 @@ write:
 Validate the output schema, row count, identifiers, values, and weighted-sum
 calculation against the source data and model predictions.
 
+The completed batted-ball outputs contain:
+
+| Year | Rows | Columns | Minimum xwOBA-local | Maximum xwOBA-local | Mean xwOBA-local |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 2025 | 123,890 | 11 | 0.000000 | 2.029717 | 0.376792 |
+| 2026 | 123,381 | 11 | 0.000000 | 2.040888 | 0.365150 |
+
+Both outputs preserve every source row and all ten source columns in their
+original order, with only `xwOBA-local` appended. An independent full-row
+recalculation from freshly generated class probabilities and the matching
+season coefficients agreed with the saved values to a maximum absolute
+difference of `4.44e-16` in each season. Both files contain finite values and
+have no temporary `.part` files remaining.
+
 ## Qualified player-season xwOBA-local
 
 For each qualified 2025 and 2026 player season, sum batted-ball
@@ -293,7 +307,7 @@ will be independently reconciled with the season-level output.
 The intended organization is:
 
 ```text
-Stage_2-Modeling/
+Stage_2-xwOBA-local/
 ├── Stage2Plan.md
 ├── experiment_config.py
 ├── model_evaluation.py
@@ -346,7 +360,7 @@ overwrite flags.
 
 - Run the baseline and all 96 currently approved KNN candidates on the complete
   dataset.
-- Produce and independently validate `ModelSelectionResuts.CSV`.
+- Produce and independently validate `ModelSelectionResults.CSV`.
 - Summarize rankings and tradeoffs under both validation designs without making
   the final choice on the user's behalf.
 - Record runtime and peak-memory observations for reproducibility.

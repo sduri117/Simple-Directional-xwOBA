@@ -27,14 +27,14 @@ line-length = 88
 target-version = ["py313"]
 
 [tool.mypy]
-files = ["Stage_1-Preprocessing", "Stage_2-Modeling", "tests"]
-mypy_path = ["Stage_1-Preprocessing", "Stage_2-Modeling"]
+files = ["Stage_1-Preprocessing", "Stage_2-xwOBA-local", "tests"]
+mypy_path = ["Stage_1-Preprocessing", "Stage_2-xwOBA-local"]
 python_version = "3.13"
 strict = true
 
 [tool.pytest.ini_options]
 addopts = "-ra"
-pythonpath = ["Stage_1-Preprocessing", "Stage_2-Modeling"]
+pythonpath = ["Stage_1-Preprocessing", "Stage_2-xwOBA-local"]
 testpaths = ["tests"]
 
 [tool.ruff]
@@ -48,6 +48,7 @@ select = ["B", "E", "F", "I", "UP"]
 known-first-party = [
     "data_download",
     "data_preprocessing",
+    "calculate_batted_ball_xwoba",
     "experiment_config",
     "model_evaluation",
     "train_final_model",
