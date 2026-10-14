@@ -19,6 +19,7 @@ dev = [
     "mypy",
     "pytest",
     "ruff",
+    "scikit-learn-stubs>=0.0.3",
 ]
 
 [tool.black]
@@ -48,5 +49,6 @@ known-first-party = [
     "data_download",
     "data_preprocessing",
     "experiment_config",
+    "model_evaluation",
 ]
 
