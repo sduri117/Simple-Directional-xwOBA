@@ -46,6 +46,7 @@ select = ["B", "E", "F", "I", "UP"]
 
 [tool.ruff.lint.isort]
 known-first-party = [
+    "analyze_results",
     "data_download",
     "data_preprocessing",
     "calculate_batted_ball_xwoba",

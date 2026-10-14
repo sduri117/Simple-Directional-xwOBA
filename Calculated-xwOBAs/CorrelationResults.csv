@@ -1,0 +1,9 @@
+analysis_level,comparison,cohort,x_variable,y_variable,n,pearson_r,r_squared
+batted_ball,xwOBA-local vs xwOBA-MLB,2025,xwOBA-local,xwOBA-MLB,123890,0.9897817216745614,0.9796678565610588
+batted_ball,xwOBA-local vs xwOBA-MLB,2026,xwOBA-local,xwOBA-MLB,123381,0.9951635093651441,0.9903504103719493
+batted_ball,xwOBA-local vs xwOBA-MLB,2025-2026 combined,xwOBA-local,xwOBA-MLB,247271,0.9921947140109416,0.9844503505112542
+player_season,xwOBA-local vs xwOBA-MLB,2025,xwOBA-local,xwOBA-MLB,145,0.9896763404192576,0.9794592587856542
+player_season,xwOBA-local vs xwOBA-MLB,2026,xwOBA-local,xwOBA-MLB,135,0.9912545820996697,0.9825856465335907
+player_season,xwOBA-local vs xwOBA-MLB,2025-2026 combined,xwOBA-local,xwOBA-MLB,280,0.9884888799411389,0.9771102657672872
+year_to_year,2025 xwOBA-MLB vs 2026 wOBA,qualified in 2025 and 2026,2025 xwOBA-MLB,2026 wOBA,80,0.2973763756761183,0.08843270881026384
+year_to_year,2025 xwOBA-local vs 2026 wOBA,qualified in 2025 and 2026,2025 xwOBA-local,2026 wOBA,80,0.2984694240271299,0.08908399707908667

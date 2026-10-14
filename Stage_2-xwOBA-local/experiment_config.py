@@ -90,6 +90,19 @@ FINAL_MODEL_METADATA_PATH: Final[Path] = (
 SEASON_LEVEL_XWOBA_PATH: Final[Path] = (
     CALCULATED_XWOBA_DIRECTORY / "SeasonLevelCalculatedxwOBA.csv"
 )
+CORRELATION_RESULTS_PATH: Final[Path] = (
+    CALCULATED_XWOBA_DIRECTORY / "CorrelationResults.csv"
+)
+PLOTS_DIRECTORY: Final[Path] = CALCULATED_XWOBA_DIRECTORY / "plots"
+PLAYER_SEASON_COMPARISON_PLOT_PATH: Final[Path] = (
+    PLOTS_DIRECTORY / "player_season_xwoba_local_vs_mlb.png"
+)
+MLB_YEAR_AHEAD_PLOT_PATH: Final[Path] = (
+    PLOTS_DIRECTORY / "year1_xwoba_mlb_vs_year2_woba.png"
+)
+LOCAL_YEAR_AHEAD_PLOT_PATH: Final[Path] = (
+    PLOTS_DIRECTORY / "year1_xwoba_local_vs_year2_woba.png"
+)
 WOBA_CONSTANTS_PATH: Final[Path] = PROCESSED_DATA_DIRECTORY / "wOBAConstants.csv"
 QUALIFIED_PLAYER_SEASONS_PATH: Final[Path] = (
     PROCESSED_DATA_DIRECTORY / "QualifiedPlayerSeasonsData.csv"

@@ -1,6 +1,6 @@
 # Stage 2: Model Selection and Calculated xwOBA
 
-**Status:** Milestone 6 complete and awaiting review as of October 14, 2026.
+**Status:** Milestone 7 complete and awaiting final review as of October 14, 2026.
 
 ## Goal
 
@@ -299,10 +299,10 @@ Calculate coefficient-of-determination (`R^2`) values for:
 - 2025 player-season `xwOBA-local` versus 2026 player-season `wOBA` among
   players qualified in both seasons.
 
-For the same-season comparisons, treat `xwOBA-MLB` as the reference response;
-for year-to-year comparisons, treat 2026 `wOBA` as the response. Compute R2 as
-`1 - residual sum of squares / total sum of squares`, matching scikit-learn's
-`r2_score`, rather than using squared Pearson correlation.
+For every comparison, calculate the Pearson correlation coefficient (`r`) and
+report `R^2` as its square: `R^2 = r * r`. This is squared Pearson correlation,
+not scikit-learn's regression `r2_score`. Save both signed `r` and `R^2` so the
+direction of each relationship remains explicit.
 
 Save a machine-readable table of all reported R2 values and create three PNG
 plots:
@@ -312,9 +312,30 @@ plots:
 2. 2025 `xwOBA-MLB` versus 2026 `wOBA` for players qualified in both seasons.
 3. 2025 `xwOBA-local` versus 2026 `wOBA` for players qualified in both seasons.
 
-Each plot will include clear labels, sample size, the relevant R2 value, and an
-appropriate reference or fitted line. Plot source rows and metric calculations
-will be independently reconciled with the season-level output.
+Each plot will include clear labels, sample size, the relevant Pearson `r` and
+`R^2` values, and an appropriate fitted line. Plot source rows and metric
+calculations will be independently reconciled with the season-level output.
+
+The completed analysis is saved in
+`Calculated-xwOBAs/CorrelationResults.csv`. It contains:
+
+| Analysis level | Cohort/comparison | n | Pearson r | Pearson R^2 |
+| --- | --- | ---: | ---: | ---: |
+| Batted ball | 2025 local vs MLB | 123,890 | 0.989782 | 0.979668 |
+| Batted ball | 2026 local vs MLB | 123,381 | 0.995164 | 0.990350 |
+| Batted ball | 2025-2026 combined local vs MLB | 247,271 | 0.992195 | 0.984450 |
+| Player season | 2025 local vs MLB | 145 | 0.989676 | 0.979459 |
+| Player season | 2026 local vs MLB | 135 | 0.991255 | 0.982586 |
+| Player season | 2025-2026 combined local vs MLB | 280 | 0.988489 | 0.977110 |
+| Year to year | 2025 MLB xwOBA vs 2026 wOBA | 80 | 0.297376 | 0.088433 |
+| Year to year | 2025 local xwOBA vs 2026 wOBA | 80 | 0.298469 | 0.089084 |
+
+The three completed plots are saved in `Calculated-xwOBAs/plots`. Each was
+visually inspected for legibility, labeling, cohort size, fitted line, and
+reported statistics. An independent NumPy and Polars reconstruction from the
+saved batted-ball and player-season artifacts reproduced all eight `r` and
+`R^2` values with a maximum absolute difference of `5.55e-17`. It also
+independently confirmed that 80 players qualified in both 2025 and 2026.
 
 ## Code organization
 
@@ -411,7 +432,8 @@ overwrite flags.
 
 ### Milestone 7: Correlation analysis, plots, and final validation
 
-- Calculate and save every specified R2 result.
+- Calculate and save Pearson `r` and `R^2 = r^2` for every specified
+  correlation.
 - Generate and visually inspect the three requested plots.
 - Independently reproduce the analysis metrics from the saved artifacts.
 - Update this document to reflect the completed implementation and record final
