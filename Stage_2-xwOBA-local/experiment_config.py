@@ -87,6 +87,9 @@ FINAL_MODEL_PATH: Final[Path] = MODEL_ARTIFACT_DIRECTORY / "xwoba_knn_2022_2024.
 FINAL_MODEL_METADATA_PATH: Final[Path] = (
     MODEL_ARTIFACT_DIRECTORY / "xwoba_knn_2022_2024.metadata.json"
 )
+SEASON_LEVEL_XWOBA_PATH: Final[Path] = (
+    CALCULATED_XWOBA_DIRECTORY / "SeasonLevelCalculatedxwOBA.csv"
+)
 WOBA_CONSTANTS_PATH: Final[Path] = PROCESSED_DATA_DIRECTORY / "wOBAConstants.csv"
 QUALIFIED_PLAYER_SEASONS_PATH: Final[Path] = (
     PROCESSED_DATA_DIRECTORY / "QualifiedPlayerSeasonsData.csv"

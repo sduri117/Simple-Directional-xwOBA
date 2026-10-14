@@ -1,6 +1,6 @@
 # Stage 2: Model Selection and Calculated xwOBA
 
-**Status:** Milestone 5 complete and awaiting review as of October 14, 2026.
+**Status:** Milestone 6 complete and awaiting review as of October 14, 2026.
 
 ## Goal
 
@@ -271,6 +271,20 @@ qualified player-season input. Source `batter_name` from `Name` and `batter_id`
 from `MLBAMID`. Validate join coverage, uniqueness of player-season keys,
 denominators, row counts, finite results, and independent formula
 recalculations.
+
+The completed `SeasonLevelCalculatedxwOBA.csv` contains:
+
+| Year | Qualified seasons | Minimum xwOBA-local | Maximum xwOBA-local | Mean xwOBA-local |
+| --- | ---: | ---: | ---: | ---: |
+| 2025 | 145 | 0.270105 | 0.464249 | 0.338498 |
+| 2026 | 135 | 0.249332 | 0.443428 | 0.331656 |
+
+All 280 qualified player-season keys are unique and matched a batted-ball
+aggregate through `MLBAMID = batter`. The saved `wOBA` and `xwOBA-MLB` values
+match the qualified-season source exactly. An independent full-row
+reconstruction of unintentional walks, numerator, denominator, season-specific
+coefficients, and batted-ball sums produced a maximum absolute difference of
+zero from the saved `xwOBA-local` values.
 
 ## Correlation analysis and plots
 

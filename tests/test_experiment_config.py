@@ -19,6 +19,7 @@ from experiment_config import (
     P_OPTIONS,
     RANDOM_SEED,
     SCALING_OPTIONS,
+    SEASON_LEVEL_XWOBA_PATH,
     SELECTED_MODEL_CONFIG,
     SELECTED_NEIGHBOR_ALGORITHM,
     TARGET_COLUMN,
@@ -115,6 +116,9 @@ def test_canonical_paths_preserve_agreed_names() -> None:
     assert FINAL_MODEL_PATH.as_posix() == ("ModelArtifacts/xwoba_knn_2022_2024.joblib")
     assert FINAL_MODEL_METADATA_PATH.as_posix() == (
         "ModelArtifacts/xwoba_knn_2022_2024.metadata.json"
+    )
+    assert SEASON_LEVEL_XWOBA_PATH.as_posix() == (
+        "Calculated-xwOBAs/SeasonLevelCalculatedxwOBA.csv"
     )
 
 
