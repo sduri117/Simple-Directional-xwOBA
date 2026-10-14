@@ -48,7 +48,6 @@ NEIGHBOR_OPTIONS: Final[tuple[int, ...]] = (
     250,
     500,
     1000,
-    2000,
 )
 WEIGHT_OPTIONS: Final[tuple[WeightName, ...]] = ("uniform", "distance")
 P_OPTIONS: Final[tuple[DistancePower, ...]] = (1, 2)
@@ -94,7 +93,7 @@ def generate_knn_configs() -> tuple[KNNConfig, ...]:
 
 
 KNN_CONFIGS: Final[tuple[KNNConfig, ...]] = generate_knn_configs()
-KNN_CANDIDATE_COUNT: Final[int] = 108
+KNN_CANDIDATE_COUNT: Final[int] = 96
 TOTAL_CANDIDATE_COUNT: Final[int] = KNN_CANDIDATE_COUNT + 1
 
 

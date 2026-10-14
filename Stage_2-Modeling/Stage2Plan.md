@@ -1,6 +1,7 @@
 # Stage 2: Model Selection and Calculated xwOBA
 
-**Status:** Milestone 2 complete and awaiting review as of October 14, 2026.
+**Status:** Milestone 3 complete and awaiting model selection as of October 14,
+2026.
 
 ## Goal
 
@@ -85,14 +86,17 @@ Every combination of the following settings will be evaluated:
 | Setting | Candidate values |
 | --- | --- |
 | Feature scaling | none, `StandardScaler`, `RobustScaler` |
-| `n_neighbors` | 5, 10, 25, 50, 100, 250, 500, 1000, 2000 |
+| `n_neighbors` | 5, 10, 25, 50, 100, 250, 500, 1000 |
 | `weights` | `uniform`, `distance` |
 | `p` | 1 (Manhattan), 2 (Euclidean) |
 
-This produces 108 KNN candidates plus the baseline. The deliberately broad
+This produces 96 KNN candidates plus the baseline. The deliberately broad
 neighbor grid includes large neighborhoods suited to probability estimation on
 approximately 370,000 training observations. The final candidate list will be
 stored as part of the experiment configuration and written to the results.
+
+The initially proposed `n_neighbors=2000` candidates were deferred during
+Milestone 3 at the user's request.
 
 A small timing and equivalence benchmark will select a supported scikit-learn
 neighbor-search algorithm before the full experiment. This computational choice
@@ -152,6 +156,35 @@ Store accompanying metadata containing the selected settings, feature order,
 class order, training years, training row count, seed, dependency versions, and
 validation metrics. Reload the artifact and verify that it reproduces a fixed
 sample of probabilities before accepting it.
+
+## Milestone 3 validation results
+
+The completed `ModelSelectionResuts.CSV` contains 97 unique rows: one baseline
+and the complete Cartesian product of the three scaling choices, eight approved
+neighbor counts, two weighting choices, and two distance powers. All 96 KNN
+rows used the ball-tree search algorithm selected by the timing and equivalence
+benchmark. The result has no duplicate candidates, missing configurations,
+unexpected nulls, invalid metrics, or `n_neighbors=2000` rows.
+
+The principal model-selection tradeoff is:
+
+| Candidate | CV log loss | Chronological log loss | CV Brier | Chronological Brier | CV accuracy | Chronological accuracy |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Baseline | 0.936974 | 0.932276 | 0.493381 | 0.490854 | 0.675660 | 0.677746 |
+| No scaling, 1000 neighbors, uniform, p=1 | **0.569540** | **0.566065** | 0.315680 | 0.313385 | 0.773674 | 0.773993 |
+| No scaling, 500 neighbors, uniform, p=2 | 0.579283 | 0.579190 | **0.315514** | **0.313077** | 0.773588 | 0.774422 |
+
+The 1,000-neighbor Manhattan candidate has the best log loss in both validation
+designs. The 500-neighbor Euclidean candidate has the best Brier score in both
+designs. These results are reported without selecting between them; final model
+selection remains the user's decision.
+
+As a reproducibility and resource check, the full six-fit evaluation of the
+included no-scaling, 1,000-neighbor, uniform, Euclidean candidate took 69.64
+seconds on the local Mac using all available scikit-learn worker threads. macOS
+reported a maximum resident set size of 4,886,577,152 bytes (about 4.55 GiB),
+with zero swaps. This representative heaviest-neighborhood measurement is well
+within the machine's 24 GB memory limit.
 
 ## Batted-ball xwOBA-local calculation
 
@@ -294,7 +327,8 @@ overwrite flags.
 
 ### Milestone 3: Full model-selection experiment
 
-- Run the baseline and all 108 KNN candidates on the complete dataset.
+- Run the baseline and all 96 currently approved KNN candidates on the complete
+  dataset.
 - Produce and independently validate `ModelSelectionResuts.CSV`.
 - Summarize rankings and tradeoffs under both validation designs without making
   the final choice on the user's behalf.

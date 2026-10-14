@@ -68,8 +68,8 @@ def test_candidate_grid_is_complete_unique_and_deterministic() -> None:
         * len(P_OPTIONS)
     )
 
-    assert expected_count == KNN_CANDIDATE_COUNT == 108
-    assert TOTAL_CANDIDATE_COUNT == 109
+    assert expected_count == KNN_CANDIDATE_COUNT == 96
+    assert TOTAL_CANDIDATE_COUNT == 97
     assert len(KNN_CONFIGS) == expected_count
     assert len(set(KNN_CONFIGS)) == expected_count
     assert KNN_CONFIGS == generate_knn_configs()
@@ -83,7 +83,7 @@ def test_candidate_grid_is_complete_unique_and_deterministic() -> None:
     assert KNN_CONFIGS[-1] == replace(
         KNN_CONFIGS[-1],
         scaling="robust",
-        n_neighbors=2000,
+        n_neighbors=1000,
         weights="distance",
         p=2,
     )
