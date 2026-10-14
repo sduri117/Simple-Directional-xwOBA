@@ -6,7 +6,11 @@ readme = "README.md"
 requires-python = ">=3.13,<3.14"
 dependencies = [
     "httpx",
+    "joblib>=1.6.0",
+    "matplotlib>=3.11.2",
+    "numpy>=2.5.4",
     "polars",
+    "scikit-learn>=1.9.1",
 ]
 
 [dependency-groups]
@@ -22,14 +26,14 @@ line-length = 88
 target-version = ["py313"]
 
 [tool.mypy]
-files = ["Stage_1-Preprocessing", "tests"]
-mypy_path = "Stage_1-Preprocessing"
+files = ["Stage_1-Preprocessing", "Stage_2-Modeling", "tests"]
+mypy_path = ["Stage_1-Preprocessing", "Stage_2-Modeling"]
 python_version = "3.13"
 strict = true
 
 [tool.pytest.ini_options]
 addopts = "-ra"
-pythonpath = ["Stage_1-Preprocessing"]
+pythonpath = ["Stage_1-Preprocessing", "Stage_2-Modeling"]
 testpaths = ["tests"]
 
 [tool.ruff]
@@ -40,5 +44,9 @@ target-version = "py313"
 select = ["B", "E", "F", "I", "UP"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["data_download", "data_preprocessing"]
+known-first-party = [
+    "data_download",
+    "data_preprocessing",
+    "experiment_config",
+]
 

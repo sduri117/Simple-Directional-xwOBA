@@ -1,6 +1,6 @@
 # Stage 2: Model Selection and Calculated xwOBA
 
-**Status:** Draft for review.
+**Status:** Milestone 1 complete and awaiting review as of October 14, 2026.
 
 ## Goal
 
