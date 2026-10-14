@@ -1,7 +1,6 @@
 # Stage 2: Model Selection and Calculated xwOBA
 
-**Status:** Milestone 3 complete and awaiting model selection as of October 14,
-2026.
+**Status:** Milestone 4 complete and awaiting review as of October 14, 2026.
 
 ## Goal
 
@@ -185,6 +184,24 @@ seconds on the local Mac using all available scikit-learn worker threads. macOS
 reported a maximum resident set size of 4,886,577,152 bytes (about 4.55 GiB),
 with zero swaps. This representative heaviest-neighborhood measurement is well
 within the machine's 24 GB memory limit.
+
+## Final-model artifact
+
+The user selected the no-scaling, 1,000-neighbor, uniform-weighted Manhattan
+distance model because it achieved the lowest log loss under both validation
+designs while remaining close to the best Brier scores. The final pipeline was
+fitted on all 370,161 batted balls from 2022 through 2024 and saved as:
+
+- `ModelArtifacts/xwoba_knn_2022_2024.joblib`
+- `ModelArtifacts/xwoba_knn_2022_2024.metadata.json`
+
+The metadata records the feature and class order, selected configuration,
+training years and row count, seed, validation metrics, dependency versions,
+input checksums, and model checksum. The model SHA-256 is
+`868d97a3cd191e7211bfa381c1611e61199cfc5839ae0e7a328416f472d15d3e`.
+An independent reload verified the fitted configuration and training coverage,
+then reproduced valid five-class probability distributions for a fixed sample
+of 257 observations with every row summing to one.
 
 ## Batted-ball xwOBA-local calculation
 

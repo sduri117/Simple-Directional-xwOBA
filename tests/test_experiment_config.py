@@ -9,6 +9,8 @@ from experiment_config import (
     CLASS_LABELS,
     CV_FOLDS,
     FEATURE_COLUMNS,
+    FINAL_MODEL_METADATA_PATH,
+    FINAL_MODEL_PATH,
     KNN_CANDIDATE_COUNT,
     KNN_CONFIGS,
     MODEL_SELECTION_RESULTS_PATH,
@@ -17,6 +19,8 @@ from experiment_config import (
     P_OPTIONS,
     RANDOM_SEED,
     SCALING_OPTIONS,
+    SELECTED_MODEL_CONFIG,
+    SELECTED_NEIGHBOR_ALGORITHM,
     TARGET_COLUMN,
     TOTAL_CANDIDATE_COUNT,
     TRAINING_YEARS,
@@ -104,6 +108,18 @@ def test_canonical_paths_preserve_agreed_names() -> None:
         "ProcessedData/2022_all_BBE.csv"
     )
     assert MODEL_SELECTION_RESULTS_PATH.name == "ModelSelectionResuts.CSV"
+    assert FINAL_MODEL_PATH.as_posix() == ("ModelArtifacts/xwoba_knn_2022_2024.joblib")
+    assert FINAL_MODEL_METADATA_PATH.as_posix() == (
+        "ModelArtifacts/xwoba_knn_2022_2024.metadata.json"
+    )
+
+
+def test_selected_model_configuration_is_explicit() -> None:
+    assert SELECTED_MODEL_CONFIG.scaling == "none"
+    assert SELECTED_MODEL_CONFIG.n_neighbors == 1000
+    assert SELECTED_MODEL_CONFIG.weights == "uniform"
+    assert SELECTED_MODEL_CONFIG.p == 1
+    assert SELECTED_NEIGHBOR_ALGORITHM == "ball_tree"
 
 
 def test_annual_batted_ball_path_rejects_unsupported_year() -> None:

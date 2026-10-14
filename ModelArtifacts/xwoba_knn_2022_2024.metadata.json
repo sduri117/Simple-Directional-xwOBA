@@ -1,0 +1,53 @@
+{
+  "class_order": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "feature_columns": [
+    "launch_speed",
+    "launch_angle"
+  ],
+  "input_sha256": {
+    "ProcessedData/2022_all_BBE.csv": "3c1ae3f2a6f66fdcdb9026aebaf098aeeda46655b4e0e86d7b356e7056505c5e",
+    "ProcessedData/2023_all_BBE.csv": "7653b4d2b5e1c947208d4e09bcb446cfb98af123bab665a08a720d17445f7e00",
+    "ProcessedData/2024_all_BBE.csv": "1987cc4bf085cec0bd25c4a78c36d0bbbf15d6db3ac565413366d214642d15bf"
+  },
+  "model_family": "KNeighborsClassifier",
+  "model_sha256": "868d97a3cd191e7211bfa381c1611e61199cfc5839ae0e7a328416f472d15d3e",
+  "random_seed": 99,
+  "schema_version": 1,
+  "selected_configuration": {
+    "feature_scaling": "none",
+    "metric": "minkowski",
+    "n_jobs": -1,
+    "n_neighbors": 1000,
+    "neighbor_algorithm": "ball_tree",
+    "p": 1,
+    "weights": "uniform"
+  },
+  "software_versions": {
+    "joblib": "1.6.0",
+    "numpy": "2.5.4",
+    "polars": "2.0.0",
+    "python": "3.13.9",
+    "scikit-learn": "1.9.1"
+  },
+  "target_column": "total_bases",
+  "training_row_count": 370161,
+  "training_years": [
+    2022,
+    2023,
+    2024
+  ],
+  "validation_metrics": {
+    "chronological_accuracy": 0.7739927541517738,
+    "chronological_brier_score": 0.31338505957967594,
+    "chronological_log_loss": 0.5660651970608699,
+    "cv_accuracy": 0.7736741580015183,
+    "cv_brier_score": 0.31568043324931583,
+    "cv_log_loss": 0.5695395154383454
+  }
+}

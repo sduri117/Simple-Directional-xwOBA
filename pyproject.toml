@@ -50,5 +50,6 @@ known-first-party = [
     "data_preprocessing",
     "experiment_config",
     "model_evaluation",
+    "train_final_model",
 ]
 

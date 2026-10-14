@@ -55,6 +55,11 @@ P_OPTIONS: Final[tuple[DistancePower, ...]] = (1, 2)
 PROCESSED_DATA_DIRECTORY: Final[Path] = Path("ProcessedData")
 CALCULATED_XWOBA_DIRECTORY: Final[Path] = Path("Calculated-xwOBAs")
 MODEL_SELECTION_RESULTS_PATH: Final[Path] = Path("ModelSelectionResuts.CSV")
+MODEL_ARTIFACT_DIRECTORY: Final[Path] = Path("ModelArtifacts")
+FINAL_MODEL_PATH: Final[Path] = MODEL_ARTIFACT_DIRECTORY / "xwoba_knn_2022_2024.joblib"
+FINAL_MODEL_METADATA_PATH: Final[Path] = (
+    MODEL_ARTIFACT_DIRECTORY / "xwoba_knn_2022_2024.metadata.json"
+)
 WOBA_CONSTANTS_PATH: Final[Path] = PROCESSED_DATA_DIRECTORY / "wOBAConstants.csv"
 QUALIFIED_PLAYER_SEASONS_PATH: Final[Path] = (
     PROCESSED_DATA_DIRECTORY / "QualifiedPlayerSeasonsData.csv"
@@ -77,6 +82,15 @@ class KNNConfig:
     n_neighbors: int
     weights: WeightName
     p: DistancePower
+
+
+SELECTED_MODEL_CONFIG: Final[KNNConfig] = KNNConfig(
+    scaling="none",
+    n_neighbors=1000,
+    weights="uniform",
+    p=1,
+)
+SELECTED_NEIGHBOR_ALGORITHM: Final[str] = "ball_tree"
 
 
 def generate_knn_configs() -> tuple[KNNConfig, ...]:
