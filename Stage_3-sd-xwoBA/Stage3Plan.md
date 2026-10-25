@@ -1,6 +1,7 @@
 # Stage 3: Simple Directional xwOBA
 
-**Status:** Milestone 2 complete and awaiting review as of October 24, 2026.
+**Status:** Milestone 3 complete and awaiting model selection as of October 24,
+2026.
 
 ## Goal
 
@@ -122,6 +123,38 @@ Report multiclass log loss as the primary metric, summed multiclass Brier
 score, and accuracy. Save all 97 results to
 `Stage_3-sd-xwoBA/ModelSelectionResults.CSV`. Present the completed results for
 review; the user will select the final configuration.
+
+## Milestone 3 validation results
+
+The completed `ModelSelectionResults.CSV` contains 97 unique rows: one baseline
+and the complete Cartesian product of three numeric-scaling choices, eight
+neighbor counts, two weighting choices, and two distance powers. All 96 KNN
+rows used the ball-tree search algorithm selected by the full-run benchmark.
+The result contains no missing or duplicate candidates, invalid metrics,
+unexpected nulls, mixed search algorithms, or temporary `.part` file. Its
+SHA-256 is
+`6c33bad84746dec15b6dbb56863caf9ac6861e14bad0f5eec6b418549a75d52e`.
+
+The principal model-selection tradeoff is:
+
+| Candidate | CV log loss | Chronological log loss | CV Brier | Chronological Brier | CV accuracy | Chronological accuracy |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Baseline | 0.936974 | 0.932276 | 0.493381 | 0.490854 | 0.675660 | 0.677746 |
+| Robust scaling, 1,000 neighbors, uniform, p=2 | **0.537843** | **0.539198** | 0.298698 | 0.298509 | 0.788676 | 0.788979 |
+| Robust scaling, 250 neighbors, uniform, p=2 | 0.559796 | 0.557697 | **0.295822** | **0.294270** | 0.789362 | 0.790178 |
+
+The robust-scaled 1,000-neighbor Euclidean candidate has the best log loss in
+both validation designs. The robust-scaled 250-neighbor Euclidean candidate has
+the best Brier score in both designs. The 250-neighbor candidate also performs
+slightly better on accuracy, although accuracy is not the primary metric. These
+results are reported without selecting between the candidates; final model
+selection remains the user's decision.
+
+The complete experiment took 2,407.82 seconds (40 minutes 7.82 seconds). A
+separate full six-fit evaluation of the representative robust-scaled,
+1,000-neighbor, uniform, Euclidean candidate took 78.25 seconds and reached a
+maximum resident set size of 4,564,516,864 bytes (about 4.25 GiB). This is well
+within the development machine's 24 GB memory limit.
 
 ## Final model and calculated values
 
