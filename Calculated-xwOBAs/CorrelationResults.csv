@@ -5,5 +5,13 @@ batted_ball,xwOBA-local vs xwOBA-MLB,2025-2026 combined,xwOBA-local,xwOBA-MLB,24
 player_season,xwOBA-local vs xwOBA-MLB,2025,xwOBA-local,xwOBA-MLB,145,0.9896763404192576,0.9794592587856542
 player_season,xwOBA-local vs xwOBA-MLB,2026,xwOBA-local,xwOBA-MLB,135,0.9912545820996697,0.9825856465335907
 player_season,xwOBA-local vs xwOBA-MLB,2025-2026 combined,xwOBA-local,xwOBA-MLB,280,0.9884888799411389,0.9771102657672872
+batted_ball_contact_value,realized wOBA value vs xwOBAcon-MLB,2025,xwOBAcon-MLB,realized wOBA value,123890,0.669785771300903,0.4486129794371455
+batted_ball_contact_value,realized wOBA value vs xwOBAcon-local,2025,xwOBAcon-local,realized wOBA value,123890,0.6690236536865644,0.44759264919212
+batted_ball_contact_value,realized wOBA value vs xwOBAcon-MLB,2026,xwOBAcon-MLB,realized wOBA value,123381,0.6720928187822377,0.4517087570586538
+batted_ball_contact_value,realized wOBA value vs xwOBAcon-local,2026,xwOBAcon-local,realized wOBA value,123381,0.6721460662690896,0.45178033440101134
+batted_ball_contact_value,realized wOBA value vs xwOBAcon-MLB,2025-2026 combined,xwOBAcon-MLB,realized wOBA value,247271,0.67090868941622,0.4501184695341899
+batted_ball_contact_value,realized wOBA value vs xwOBAcon-local,2025-2026 combined,xwOBAcon-local,realized wOBA value,247271,0.6703673299333682,0.4493923570419934
 year_to_year,2025 xwOBA-MLB vs 2026 wOBA,qualified in 2025 and 2026,2025 xwOBA-MLB,2026 wOBA,80,0.2973763756761183,0.08843270881026384
 year_to_year,2025 xwOBA-local vs 2026 wOBA,qualified in 2025 and 2026,2025 xwOBA-local,2026 wOBA,80,0.2984694240271299,0.08908399707908667
+year_to_year_contact,2025 xwOBAcon-MLB vs 2026 wOBAcon,qualified in 2025 and 2026,2025 xwOBAcon-MLB,2026 wOBAcon,80,0.6181150141245288,0.3820661706861665
+year_to_year_contact,2025 xwOBAcon-local vs 2026 wOBAcon,qualified in 2025 and 2026,2025 xwOBAcon-local,2026 wOBAcon,80,0.6095731315697537,0.3715794027317562

@@ -1,6 +1,6 @@
 # Stage 2: Model Selection and Calculated xwOBA
 
-**Status:** Milestone 7 complete and awaiting final review as of October 14, 2026.
+**Status:** Milestone 8 complete and awaiting review as of October 24, 2026.
 
 ## Goal
 
@@ -265,6 +265,9 @@ Use the matching season's `wBB` and `wHBP` coefficients. Write
 4. `wOBA`
 5. `xwOBA-MLB`
 6. `xwOBA-local`
+7. `wOBAcon`
+8. `xwOBAcon-MLB`
+9. `xwOBAcon-local`
 
 Source `wOBA` and `xwOBA-MLB` from `wOBA` and `xwOBA`, respectively, in the
 qualified player-season input. Source `batter_name` from `Name` and `batter_id`
@@ -336,6 +339,70 @@ reported statistics. An independent NumPy and Polars reconstruction from the
 saved batted-ball and player-season artifacts reproduced all eight `r` and
 `R^2` values with a maximum absolute difference of `5.55e-17`. It also
 independently confirmed that 80 players qualified in both 2025 and 2026.
+
+## Contact-only metrics and correlations
+
+The reusable `calculate_season_xwoba.py` command also calculates contact-only
+metrics for every qualified 2025 and 2026 player-season. For each batted ball,
+map `total_bases` 0 through 4 to the season's out, `w1B`, `w2B`, `w3B`, and
+`wHR` values. The out value is zero. Then calculate:
+
+```text
+wOBAcon = sum(realized batted-ball wOBA values) / batted-ball count
+xwOBAcon-MLB = sum(batted-ball xwOBA-MLB) / batted-ball count
+xwOBAcon-local = sum(batted-ball xwOBA-local) / batted-ball count
+```
+
+The script validates annual coefficient coverage, allowed outcomes, finite
+values, player-season join coverage, counts, and independent sum/count
+recalculations before atomically replacing the season-level output. Run it with:
+
+```text
+uv run python Stage_2-xwOBA-local/calculate_season_xwoba.py --overwrite
+```
+
+The completed contact-only season metrics are:
+
+| Year | Metric | Minimum | Mean | Maximum |
+| --- | --- | ---: | ---: | ---: |
+| 2025 | wOBAcon | 0.281776 | 0.383259 | 0.598591 |
+| 2025 | xwOBAcon-MLB | 0.289799 | 0.385913 | 0.589183 |
+| 2025 | xwOBAcon-local | 0.290623 | 0.394451 | 0.601044 |
+| 2026 | wOBAcon | 0.286711 | 0.383511 | 0.509305 |
+| 2026 | xwOBAcon-MLB | 0.265608 | 0.379503 | 0.532911 |
+| 2026 | xwOBAcon-local | 0.253134 | 0.382478 | 0.534252 |
+
+As a diagnostic rather than a hard invariant, `wOBAcon` exceeded overall
+`wOBA` in 267 of 280 qualified seasons, `xwOBAcon-MLB` exceeded overall
+`xwOBA-MLB` in 262 of 280, and `xwOBAcon-local` exceeded overall
+`xwOBA-local` in 266 of 280.
+
+At the batted-ball level, the realized contact value is the matching season's
+out/single/double/triple/home-run wOBA coefficient. Correlate that value with
+each expected batted-ball value. At the year-to-year player level, compare
+2025 `xwOBAcon-MLB` and `xwOBAcon-local` with 2026 `wOBAcon` for the 80 players
+qualified in both seasons. As elsewhere in Stage 2, report signed Pearson `r`
+and `R^2 = r^2`:
+
+| Level | Cohort/comparison | n | Pearson r | Pearson R^2 |
+| --- | --- | ---: | ---: | ---: |
+| Batted ball | 2025 MLB expected vs realized contact value | 123,890 | 0.669786 | 0.448613 |
+| Batted ball | 2025 local expected vs realized contact value | 123,890 | 0.669024 | 0.447593 |
+| Batted ball | 2026 MLB expected vs realized contact value | 123,381 | 0.672093 | 0.451709 |
+| Batted ball | 2026 local expected vs realized contact value | 123,381 | 0.672146 | 0.451780 |
+| Batted ball | Combined MLB expected vs realized contact value | 247,271 | 0.670909 | 0.450118 |
+| Batted ball | Combined local expected vs realized contact value | 247,271 | 0.670367 | 0.449392 |
+| Year to year | 2025 xwOBAcon-MLB vs 2026 wOBAcon | 80 | 0.618115 | 0.382066 |
+| Year to year | 2025 xwOBAcon-local vs 2026 wOBAcon | 80 | 0.609573 | 0.371579 |
+
+These eight rows are appended to the original eight rows in
+`Calculated-xwOBAs/CorrelationResults.csv`.
+
+An independent reconstruction that did not import the project calculation
+functions reproduced all 280 saved contact-only player-season values exactly.
+It also reproduced the six batted-ball correlation rows exactly and the two
+year-ahead rows to a maximum absolute difference of `1.67e-16`, while
+independently confirming the 80-player matched cohort.
 
 ## Code organization
 
@@ -439,6 +506,19 @@ overwrite flags.
 - Update this document to reflect the completed implementation and record final
   validation results.
 - Run the full quality gate, then pause for final Stage 2 review.
+
+### Milestone 8: Contact-only metrics and correlations
+
+- Extend the reusable player-season calculation script to calculate `wOBAcon`,
+  `xwOBAcon-MLB`, and `xwOBAcon-local` from batted-ball inputs and annual
+  coefficients.
+- Append the three metrics to every qualified player-season and independently
+  validate each calculation.
+- Calculate batted-ball realized-versus-expected contact correlations and 2025
+  expected-contact versus 2026 realized-contact correlations using Pearson
+  `r` and `R^2 = r^2`.
+- Regenerate and independently validate the season and correlation artifacts.
+- Run the full quality gate, then pause for review.
 
 ## Quality gate
 

@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.axes import Axes  # noqa: E402
 from matplotlib.figure import Figure  # noqa: E402
 
+from calculate_season_xwoba import WobaWeights, load_woba_weights  # noqa: E402
 from experiment_config import (  # noqa: E402
     CALCULATED_XWOBA_DIRECTORY,
     CORRELATION_RESULTS_PATH,
@@ -28,6 +29,7 @@ from experiment_config import (  # noqa: E402
     PLAYER_SEASON_COMPARISON_PLOT_PATH,
     PREDICTION_YEARS,
     SEASON_LEVEL_XWOBA_PATH,
+    WOBA_CONSTANTS_PATH,
     XWOBA_LOCAL_COLUMN,
 )
 
@@ -48,6 +50,9 @@ SEASON_COLUMNS: Final[tuple[str, ...]] = (
     "wOBA",
     "xwOBA-MLB",
     XWOBA_LOCAL_COLUMN,
+    "wOBAcon",
+    "xwOBAcon-MLB",
+    "xwOBAcon-local",
 )
 PLOT_DPI: Final[int] = 180
 
@@ -102,16 +107,24 @@ def pearson_statistics(
     return CorrelationStatistics(x.size, pearson_r, pearson_r * pearson_r)
 
 
-def load_batted_ball_analysis(path: Path, year: int) -> pl.DataFrame:
+def load_batted_ball_analysis(
+    path: Path, year: int, weights: WobaWeights
+) -> pl.DataFrame:
     """Load and validate the two batted-ball measures needed for analysis."""
     if year not in PREDICTION_YEARS:
         raise ValueError(f"Unsupported prediction year: {year}")
     try:
         frame = pl.read_csv(
             path,
-            columns=["game_date", "xwOBA-MLB", XWOBA_LOCAL_COLUMN],
+            columns=[
+                "game_date",
+                "total_bases",
+                "xwOBA-MLB",
+                XWOBA_LOCAL_COLUMN,
+            ],
             schema_overrides={
                 "game_date": pl.String,
+                "total_bases": pl.Int64,
                 "xwOBA-MLB": pl.Float64,
                 XWOBA_LOCAL_COLUMN: pl.Float64,
             },
@@ -120,7 +133,7 @@ def load_batted_ball_analysis(path: Path, year: int) -> pl.DataFrame:
         raise AnalysisError(
             f"Could not read batted-ball analysis input {path}: {error}"
         ) from error
-    if frame.is_empty() or frame.null_count().row(0) != (0, 0, 0):
+    if frame.is_empty() or any(frame.null_count().row(0)):
         raise AnalysisError(
             f"Batted-ball analysis input for {year} is empty or has nulls"
         )
@@ -129,6 +142,14 @@ def load_batted_ball_analysis(path: Path, year: int) -> pl.DataFrame:
     ).height:
         raise AnalysisError(
             f"Batted-ball analysis input for {year} has non-finite values"
+        )
+    invalid_outcomes = set(
+        cast(list[int], frame["total_bases"].unique().to_list())
+    ) - set(range(5))
+    if invalid_outcomes:
+        raise AnalysisError(
+            f"Batted-ball analysis input for {year} has invalid outcomes: "
+            f"{sorted(invalid_outcomes)}"
         )
     dates = frame["game_date"].str.to_date(strict=False)
     if dates.null_count():
@@ -141,7 +162,19 @@ def load_batted_ball_analysis(path: Path, year: int) -> pl.DataFrame:
             "Batted-ball analysis input contains years "
             f"{sorted(actual_years)}, expected {year}"
         )
-    return frame.with_columns(pl.lit(year).cast(pl.Int64).alias("year"))
+    outcome_weights = {
+        0: 0.0,
+        1: weights.single,
+        2: weights.double,
+        3: weights.triple,
+        4: weights.home_run,
+    }
+    return frame.with_columns(
+        pl.lit(year).cast(pl.Int64).alias("year"),
+        pl.col("total_bases")
+        .replace_strict(outcome_weights, return_dtype=pl.Float64)
+        .alias("realized_woba"),
+    )
 
 
 def load_season_analysis(path: Path) -> pl.DataFrame:
@@ -177,7 +210,14 @@ def load_season_analysis(path: Path) -> pl.DataFrame:
         )
     if frame.group_by("year", "batter_id").len().filter(pl.col("len") != 1).height:
         raise AnalysisError("Season analysis contains duplicate player-season keys")
-    for column in ("wOBA", "xwOBA-MLB", XWOBA_LOCAL_COLUMN):
+    for column in (
+        "wOBA",
+        "xwOBA-MLB",
+        XWOBA_LOCAL_COLUMN,
+        "wOBAcon",
+        "xwOBAcon-MLB",
+        "xwOBAcon-local",
+    ):
         if frame.filter(~pl.col(column).is_finite()).height:
             raise AnalysisError(f"Season analysis contains non-finite {column} values")
     return frame
@@ -191,11 +231,14 @@ def matched_player_seasons(seasons: pl.DataFrame) -> pl.DataFrame:
         pl.col("batter_name").alias("batter_name_2025"),
         pl.col("xwOBA-MLB").alias("xwOBA-MLB_2025"),
         pl.col(XWOBA_LOCAL_COLUMN).alias("xwOBA-local_2025"),
+        pl.col("xwOBAcon-MLB").alias("xwOBAcon-MLB_2025"),
+        pl.col("xwOBAcon-local").alias("xwOBAcon-local_2025"),
     )
     second = seasons.filter(pl.col("year") == year_two).select(
         "batter_id",
         pl.col("batter_name").alias("batter_name_2026"),
         pl.col("wOBA").alias("wOBA_2026"),
+        pl.col("wOBAcon").alias("wOBAcon_2026"),
     )
     matched = first.join(second, on="batter_id", how="inner", validate="1:1").sort(
         "batter_id"
@@ -230,7 +273,7 @@ def _result_record(
 def build_correlation_results(
     batted_balls: Mapping[int, pl.DataFrame], seasons: pl.DataFrame
 ) -> tuple[pl.DataFrame, pl.DataFrame]:
-    """Build all eight specified correlation results and the year-ahead cohort."""
+    """Build all specified correlation results and the year-ahead cohort."""
     if set(batted_balls) != set(PREDICTION_YEARS):
         raise AnalysisError("Batted-ball analysis requires both prediction years")
     records: list[dict[str, str | int | float]] = []
@@ -267,6 +310,40 @@ def build_correlation_results(
             )
         )
 
+    for year in PREDICTION_YEARS:
+        frame = batted_balls[year]
+        for expected_column, expected_label in (
+            ("xwOBA-MLB", "xwOBAcon-MLB"),
+            (XWOBA_LOCAL_COLUMN, "xwOBAcon-local"),
+        ):
+            records.append(
+                _result_record(
+                    "batted_ball_contact_value",
+                    f"realized wOBA value vs {expected_label}",
+                    str(year),
+                    expected_label,
+                    "realized wOBA value",
+                    frame[expected_column].to_numpy(),
+                    frame["realized_woba"].to_numpy(),
+                )
+            )
+    combined_batted_balls = pl.concat([batted_balls[year] for year in PREDICTION_YEARS])
+    for expected_column, expected_label in (
+        ("xwOBA-MLB", "xwOBAcon-MLB"),
+        (XWOBA_LOCAL_COLUMN, "xwOBAcon-local"),
+    ):
+        records.append(
+            _result_record(
+                "batted_ball_contact_value",
+                f"realized wOBA value vs {expected_label}",
+                "2025-2026 combined",
+                expected_label,
+                "realized wOBA value",
+                combined_batted_balls[expected_column].to_numpy(),
+                combined_batted_balls["realized_woba"].to_numpy(),
+            )
+        )
+
     matched = matched_player_seasons(seasons)
     for x_column, x_label in (
         ("xwOBA-MLB_2025", "2025 xwOBA-MLB"),
@@ -281,6 +358,22 @@ def build_correlation_results(
                 "2026 wOBA",
                 matched[x_column].to_numpy(),
                 matched["wOBA_2026"].to_numpy(),
+            )
+        )
+
+    for x_column, x_label in (
+        ("xwOBAcon-MLB_2025", "2025 xwOBAcon-MLB"),
+        ("xwOBAcon-local_2025", "2025 xwOBAcon-local"),
+    ):
+        records.append(
+            _result_record(
+                "year_to_year_contact",
+                f"{x_label} vs 2026 wOBAcon",
+                "qualified in 2025 and 2026",
+                x_label,
+                "2026 wOBAcon",
+                matched[x_column].to_numpy(),
+                matched["wOBAcon_2026"].to_numpy(),
             )
         )
 
@@ -411,7 +504,7 @@ def validate_results_output(path: Path, expected: pl.DataFrame) -> None:
         raise AnalysisError(
             f"Could not validate correlation results {path}: {error}"
         ) from error
-    if actual.columns != list(RESULT_COLUMNS) or actual.height != 8:
+    if actual.columns != list(RESULT_COLUMNS) or actual.height != 16:
         raise AnalysisError("Correlation result output has an invalid shape or schema")
     if (
         actual.select(RESULT_COLUMNS[:-2]).to_dicts()
@@ -435,6 +528,7 @@ def validate_results_output(path: Path, expected: pl.DataFrame) -> None:
 def analyze(
     calculated_directory: Path = CALCULATED_XWOBA_DIRECTORY,
     season_path: Path = SEASON_LEVEL_XWOBA_PATH,
+    constants_path: Path = WOBA_CONSTANTS_PATH,
     results_path: Path = CORRELATION_RESULTS_PATH,
     player_season_plot_path: Path = PLAYER_SEASON_COMPARISON_PLOT_PATH,
     mlb_year_ahead_plot_path: Path = MLB_YEAR_AHEAD_PLOT_PATH,
@@ -455,10 +549,12 @@ def analyze(
             f"Analysis output replacement was not requested: {existing}"
         )
 
+    weights = load_woba_weights(constants_path)
     batted_balls = {
         year: load_batted_ball_analysis(
             calculated_directory / f"{year}_all_BBE_with_calculated_xwOBAs.csv",
             year,
+            weights[year],
         )
         for year in PREDICTION_YEARS
     }
@@ -491,6 +587,7 @@ def parse_args(arguments: Sequence[str] | None = None) -> argparse.Namespace:
         "--calculated-directory", type=Path, default=CALCULATED_XWOBA_DIRECTORY
     )
     parser.add_argument("--season-data", type=Path, default=SEASON_LEVEL_XWOBA_PATH)
+    parser.add_argument("--constants", type=Path, default=WOBA_CONSTANTS_PATH)
     parser.add_argument("--results", type=Path, default=CORRELATION_RESULTS_PATH)
     parser.add_argument(
         "--player-season-plot", type=Path, default=PLAYER_SEASON_COMPARISON_PLOT_PATH
@@ -511,6 +608,7 @@ def main(arguments: Sequence[str] | None = None) -> int:
     summary = analyze(
         calculated_directory=args.calculated_directory,
         season_path=args.season_data,
+        constants_path=args.constants,
         results_path=args.results,
         player_season_plot_path=args.player_season_plot,
         mlb_year_ahead_plot_path=args.mlb_year_ahead_plot,

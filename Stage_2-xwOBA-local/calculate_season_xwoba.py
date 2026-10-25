@@ -53,6 +53,9 @@ SEASON_OUTPUT_COLUMNS: Final[tuple[str, ...]] = (
     "wOBA",
     "xwOBA-MLB",
     XWOBA_LOCAL_COLUMN,
+    "wOBAcon",
+    "xwOBAcon-MLB",
+    "xwOBAcon-local",
 )
 SEASON_OUTPUT_SCHEMA: Final[dict[str, type[pl.DataType]]] = {
     "year": pl.Int64,
@@ -61,6 +64,9 @@ SEASON_OUTPUT_SCHEMA: Final[dict[str, type[pl.DataType]]] = {
     "wOBA": pl.Float64,
     "xwOBA-MLB": pl.Float64,
     XWOBA_LOCAL_COLUMN: pl.Float64,
+    "wOBAcon": pl.Float64,
+    "xwOBAcon-MLB": pl.Float64,
+    "xwOBAcon-local": pl.Float64,
 }
 
 
@@ -73,12 +79,16 @@ class SeasonOutputExistsError(SeasonCalculationError):
 
 
 @dataclass(frozen=True, slots=True)
-class PlateAppearanceWeights:
-    """Walk and hit-by-pitch coefficients for one season."""
+class WobaWeights:
+    """Plate-appearance and batted-ball wOBA coefficients for one season."""
 
     year: int
     unintentional_walk: float
     hit_by_pitch: float
+    single: float
+    double: float
+    triple: float
+    home_run: float
 
 
 @dataclass(frozen=True, slots=True)
@@ -143,11 +153,9 @@ def load_qualified_seasons(path: Path) -> pl.DataFrame:
     return frame
 
 
-def load_plate_appearance_weights(
-    path: Path,
-) -> dict[int, PlateAppearanceWeights]:
-    """Load and validate wBB and wHBP for both prediction seasons."""
-    columns = ["Season", "wBB", "wHBP"]
+def load_woba_weights(path: Path) -> dict[int, WobaWeights]:
+    """Load and validate all required wOBA coefficients for both seasons."""
+    columns = ["Season", "wBB", "wHBP", "w1B", "w2B", "w3B", "wHR"]
     try:
         frame = pl.read_csv(
             path,
@@ -156,6 +164,10 @@ def load_plate_appearance_weights(
                 "Season": pl.Int64,
                 "wBB": pl.Float64,
                 "wHBP": pl.Float64,
+                "w1B": pl.Float64,
+                "w2B": pl.Float64,
+                "w3B": pl.Float64,
+                "wHR": pl.Float64,
             },
         ).filter(pl.col("Season").is_in(PREDICTION_YEARS))
     except (OSError, pl.exceptions.PolarsError) as error:
@@ -168,16 +180,20 @@ def load_plate_appearance_weights(
         raise SeasonCalculationError(
             "Expected one plate-appearance coefficient row per prediction year"
         )
-    result: dict[int, PlateAppearanceWeights] = {}
+    result: dict[int, WobaWeights] = {}
     for row in frame.iter_rows(named=True):
         year = int(cast(int, row["Season"]))
         walk = float(cast(float, row["wBB"]))
         hbp = float(cast(float, row["wHBP"]))
-        if not all(math.isfinite(value) and value > 0.0 for value in (walk, hbp)):
+        batted_ball_weights = tuple(
+            float(cast(float, row[column])) for column in ("w1B", "w2B", "w3B", "wHR")
+        )
+        coefficients = (walk, hbp, *batted_ball_weights)
+        if not all(math.isfinite(value) and value > 0.0 for value in coefficients):
             raise SeasonCalculationError(
-                f"Plate-appearance coefficients for {year} must be finite and positive"
+                f"wOBA coefficients for {year} must be finite and positive"
             )
-        result[year] = PlateAppearanceWeights(year, walk, hbp)
+        result[year] = WobaWeights(year, walk, hbp, *batted_ball_weights)
     if set(result) != set(PREDICTION_YEARS):
         raise SeasonCalculationError(
             "Plate-appearance coefficient years are incomplete"
@@ -185,17 +201,27 @@ def load_plate_appearance_weights(
     return result
 
 
-def aggregate_batted_ball_xwoba(path: Path, year: int) -> pl.DataFrame:
-    """Sum calculated batted-ball xwOBA by batter for one season."""
+def aggregate_batted_ball_xwoba(
+    path: Path, year: int, weights: WobaWeights
+) -> pl.DataFrame:
+    """Aggregate expected and realized batted-ball wOBA by batter and season."""
     if year not in PREDICTION_YEARS:
         raise ValueError(f"Unsupported prediction year: {year}")
     try:
         frame = pl.read_csv(
             path,
-            columns=["game_date", "batter", XWOBA_LOCAL_COLUMN],
+            columns=[
+                "game_date",
+                "batter",
+                "total_bases",
+                "xwOBA-MLB",
+                XWOBA_LOCAL_COLUMN,
+            ],
             schema_overrides={
                 "game_date": pl.String,
                 "batter": pl.Int64,
+                "total_bases": pl.Int64,
+                "xwOBA-MLB": pl.Float64,
                 XWOBA_LOCAL_COLUMN: pl.Float64,
             },
         )
@@ -207,13 +233,23 @@ def aggregate_batted_ball_xwoba(path: Path, year: int) -> pl.DataFrame:
         raise SeasonCalculationError(
             f"Calculated batted-ball input for {year} is empty"
         )
-    if frame.null_count().row(0) != (0, 0, 0):
+    if any(frame.null_count().row(0)):
         raise SeasonCalculationError(
             f"Calculated batted-ball input for {year} contains null values"
         )
-    if frame.filter(~pl.col(XWOBA_LOCAL_COLUMN).is_finite()).height:
+    if frame.filter(
+        ~pl.col("xwOBA-MLB").is_finite() | ~pl.col(XWOBA_LOCAL_COLUMN).is_finite()
+    ).height:
         raise SeasonCalculationError(
             f"Calculated batted-ball input for {year} contains non-finite values"
+        )
+    invalid_outcomes = set(
+        cast(list[int], frame["total_bases"].unique().to_list())
+    ) - set(range(5))
+    if invalid_outcomes:
+        raise SeasonCalculationError(
+            f"Calculated batted-ball input for {year} has invalid outcomes: "
+            f"{sorted(invalid_outcomes)}"
         )
     parsed_dates = frame["game_date"].str.to_date(strict=False)
     if parsed_dates.null_count():
@@ -226,22 +262,49 @@ def aggregate_batted_ball_xwoba(path: Path, year: int) -> pl.DataFrame:
             f"Calculated batted-ball input contains years {sorted(actual_years)}, "
             f"expected {year}"
         )
+    outcome_weights = {
+        0: 0.0,
+        1: weights.single,
+        2: weights.double,
+        3: weights.triple,
+        4: weights.home_run,
+    }
     return (
-        frame.group_by("batter")
+        frame.with_columns(
+            pl.col("total_bases")
+            .replace_strict(outcome_weights, return_dtype=pl.Float64)
+            .alias("realized_woba")
+        )
+        .group_by("batter")
         .agg(
             pl.len().cast(pl.Int64).alias("batted_ball_count"),
             pl.col(XWOBA_LOCAL_COLUMN).sum().alias("batted_ball_xwoba_sum"),
+            pl.col("xwOBA-MLB").sum().alias("batted_ball_mlb_xwoba_sum"),
+            pl.col("realized_woba").sum().alias("batted_ball_woba_sum"),
+            pl.col("realized_woba").mean().alias("wOBAcon"),
+            pl.col("xwOBA-MLB").mean().alias("xwOBAcon-MLB"),
+            pl.col(XWOBA_LOCAL_COLUMN).mean().alias("xwOBAcon-local"),
         )
         .with_columns(pl.lit(year).cast(pl.Int64).alias("year"))
         .rename({"batter": "batter_id"})
-        .select("year", "batter_id", "batted_ball_count", "batted_ball_xwoba_sum")
+        .select(
+            "year",
+            "batter_id",
+            "batted_ball_count",
+            "batted_ball_xwoba_sum",
+            "batted_ball_mlb_xwoba_sum",
+            "batted_ball_woba_sum",
+            "wOBAcon",
+            "xwOBAcon-MLB",
+            "xwOBAcon-local",
+        )
     )
 
 
 def calculate_season_frame(
     qualified: pl.DataFrame,
     batted_ball_aggregates: pl.DataFrame,
-    weights: Mapping[int, PlateAppearanceWeights],
+    weights: Mapping[int, WobaWeights],
 ) -> tuple[pl.DataFrame, pl.DataFrame]:
     """Join inputs and calculate season xwOBA-local plus reconciliation fields."""
     coefficient_frame = pl.DataFrame(
@@ -339,9 +402,16 @@ def validate_season_output(
         raise SeasonCalculationError("Written season output changed from expectation")
     if output.group_by(["year", "batter_id"]).len().filter(pl.col("len") != 1).height:
         raise SeasonCalculationError("Season output has duplicate player-season keys")
-    if output.null_count().row(0) != (0, 0, 0, 0, 0, 0):
+    if any(output.null_count().row(0)):
         raise SeasonCalculationError("Season output contains null values")
-    for column in ("wOBA", "xwOBA-MLB", XWOBA_LOCAL_COLUMN):
+    for column in (
+        "wOBA",
+        "xwOBA-MLB",
+        XWOBA_LOCAL_COLUMN,
+        "wOBAcon",
+        "xwOBAcon-MLB",
+        "xwOBAcon-local",
+    ):
         if output.filter(~pl.col(column).is_finite()).height:
             raise SeasonCalculationError(
                 f"Season output contains non-finite {column} values"
@@ -358,6 +428,23 @@ def validate_season_output(
     actual = output[XWOBA_LOCAL_COLUMN].to_numpy()
     if not np.allclose(actual, independently_calculated, rtol=0.0, atol=1e-15):
         raise SeasonCalculationError("Season output fails independent formula check")
+    for mean_column, sum_column in (
+        ("wOBAcon", "batted_ball_woba_sum"),
+        ("xwOBAcon-MLB", "batted_ball_mlb_xwoba_sum"),
+        ("xwOBAcon-local", "batted_ball_xwoba_sum"),
+    ):
+        independently_calculated_mean = (
+            reconciliation[sum_column] / reconciliation["batted_ball_count"]
+        ).to_numpy()
+        if not np.allclose(
+            output[mean_column].to_numpy(),
+            independently_calculated_mean,
+            rtol=0.0,
+            atol=1e-15,
+        ):
+            raise SeasonCalculationError(
+                f"Season output fails independent {mean_column} check"
+            )
 
 
 def calculate_all_seasons(
@@ -374,12 +461,13 @@ def calculate_all_seasons(
             f"Output exists and replacement was not requested: {output_path}"
         )
     qualified = load_qualified_seasons(qualified_path)
-    weights = load_plate_appearance_weights(constants_path)
+    weights = load_woba_weights(constants_path)
     aggregates = pl.concat(
         [
             aggregate_batted_ball_xwoba(
                 calculated_directory / calculated_batted_ball_path(year).name,
                 year,
+                weights[year],
             )
             for year in PREDICTION_YEARS
         ],

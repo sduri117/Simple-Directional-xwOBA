@@ -8,14 +8,14 @@ import pytest
 
 from calculate_season_xwoba import (
     SEASON_OUTPUT_COLUMNS,
-    PlateAppearanceWeights,
     SeasonCalculationError,
     SeasonOutputExistsError,
+    WobaWeights,
     aggregate_batted_ball_xwoba,
     calculate_all_seasons,
     calculate_season_frame,
-    load_plate_appearance_weights,
     load_qualified_seasons,
+    load_woba_weights,
     parse_args,
     validate_season_output,
 )
@@ -49,6 +49,10 @@ def write_constants(path: Path) -> None:
             "Season": [2025, 2026],
             "wBB": [0.70, 0.71],
             "wHBP": [0.72, 0.73],
+            "w1B": [0.90, 0.91],
+            "w2B": [1.30, 1.31],
+            "w3B": [1.60, 1.61],
+            "wHR": [2.00, 2.01],
         }
     ).write_csv(path)
 
@@ -59,6 +63,8 @@ def write_calculated_batted_balls(directory: Path) -> None:
         {
             "game_date": ["2025-04-01", "2025-04-02", "2025-04-03"],
             "batter": [10, 10, 20],
+            "total_bases": [1, 0, 4],
+            "xwOBA-MLB": [0.3, 0.2, 0.9],
             XWOBA_LOCAL_COLUMN: [0.2, 0.4, 0.8],
         }
     ).write_csv(directory / "2025_all_BBE_with_calculated_xwOBAs.csv")
@@ -66,6 +72,8 @@ def write_calculated_batted_balls(directory: Path) -> None:
         {
             "game_date": ["2026-04-01", "2026-04-02", "2026-04-03"],
             "batter": [10, 30, 30],
+            "total_bases": [2, 0, 1],
+            "xwOBA-MLB": [0.6, 0.5, 0.8],
             XWOBA_LOCAL_COLUMN: [0.5, 0.6, 0.7],
         }
     ).write_csv(directory / "2026_all_BBE_with_calculated_xwOBAs.csv")
@@ -101,15 +109,15 @@ def test_load_qualified_seasons_rejects_ibb_greater_than_bb(tmp_path: Path) -> N
         load_qualified_seasons(path)
 
 
-def test_load_plate_appearance_weights(tmp_path: Path) -> None:
+def test_load_woba_weights(tmp_path: Path) -> None:
     path = tmp_path / "constants.csv"
     write_constants(path)
 
-    result = load_plate_appearance_weights(path)
+    result = load_woba_weights(path)
 
     assert result == {
-        2025: PlateAppearanceWeights(2025, 0.70, 0.72),
-        2026: PlateAppearanceWeights(2026, 0.71, 0.73),
+        2025: WobaWeights(2025, 0.70, 0.72, 0.90, 1.30, 1.60, 2.00),
+        2026: WobaWeights(2026, 0.71, 0.73, 0.91, 1.31, 1.61, 2.01),
     }
 
 
@@ -117,12 +125,17 @@ def test_aggregate_batted_ball_xwoba_sums_by_batter(tmp_path: Path) -> None:
     write_calculated_batted_balls(tmp_path)
 
     result = aggregate_batted_ball_xwoba(
-        tmp_path / "2025_all_BBE_with_calculated_xwOBAs.csv", 2025
+        tmp_path / "2025_all_BBE_with_calculated_xwOBAs.csv",
+        2025,
+        WobaWeights(2025, 0.70, 0.72, 0.90, 1.30, 1.60, 2.00),
     ).sort("batter_id")
 
     assert result["batter_id"].to_list() == [10, 20]
     assert result["batted_ball_count"].to_list() == [2, 1]
     np.testing.assert_allclose(result["batted_ball_xwoba_sum"].to_numpy(), [0.6, 0.8])
+    np.testing.assert_allclose(result["wOBAcon"].to_numpy(), [0.45, 2.0])
+    np.testing.assert_allclose(result["xwOBAcon-MLB"].to_numpy(), [0.25, 0.9])
+    np.testing.assert_allclose(result["xwOBAcon-local"].to_numpy(), [0.3, 0.8])
 
 
 def test_aggregate_batted_ball_xwoba_validates_year(tmp_path: Path) -> None:
@@ -130,7 +143,9 @@ def test_aggregate_batted_ball_xwoba_validates_year(tmp_path: Path) -> None:
 
     with pytest.raises(SeasonCalculationError, match="contains years"):
         aggregate_batted_ball_xwoba(
-            tmp_path / "2025_all_BBE_with_calculated_xwOBAs.csv", 2026
+            tmp_path / "2025_all_BBE_with_calculated_xwOBAs.csv",
+            2026,
+            WobaWeights(2026, 0.71, 0.73, 0.91, 1.31, 1.61, 2.01),
         )
 
 
@@ -142,17 +157,27 @@ def test_calculate_season_frame_applies_formula() -> None:
             "batter_id": [10, 20, 10, 30],
             "batted_ball_count": [2, 1, 1, 2],
             "batted_ball_xwoba_sum": [0.6, 0.8, 0.5, 1.3],
+            "batted_ball_mlb_xwoba_sum": [0.5, 0.9, 0.6, 1.3],
+            "batted_ball_woba_sum": [0.9, 2.0, 1.31, 0.91],
+            "wOBAcon": [0.45, 2.0, 1.31, 0.455],
+            "xwOBAcon-MLB": [0.25, 0.9, 0.6, 0.65],
+            "xwOBAcon-local": [0.3, 0.8, 0.5, 0.65],
         },
         schema={
             "year": pl.Int64,
             "batter_id": pl.Int64,
             "batted_ball_count": pl.Int64,
             "batted_ball_xwoba_sum": pl.Float64,
+            "batted_ball_mlb_xwoba_sum": pl.Float64,
+            "batted_ball_woba_sum": pl.Float64,
+            "wOBAcon": pl.Float64,
+            "xwOBAcon-MLB": pl.Float64,
+            "xwOBAcon-local": pl.Float64,
         },
     )
     weights = {
-        2025: PlateAppearanceWeights(2025, 0.70, 0.72),
-        2026: PlateAppearanceWeights(2026, 0.71, 0.73),
+        2025: WobaWeights(2025, 0.70, 0.72, 0.90, 1.30, 1.60, 2.00),
+        2026: WobaWeights(2026, 0.71, 0.73, 0.91, 1.31, 1.61, 2.01),
     }
 
     output, reconciliation = calculate_season_frame(qualified, aggregates, weights)
@@ -177,11 +202,16 @@ def test_calculate_season_frame_requires_batted_ball_match() -> None:
             "batter_id": [10, 20, 10],
             "batted_ball_count": [2, 1, 1],
             "batted_ball_xwoba_sum": [0.6, 0.8, 0.5],
+            "batted_ball_mlb_xwoba_sum": [0.5, 0.9, 0.6],
+            "batted_ball_woba_sum": [0.9, 2.0, 1.31],
+            "wOBAcon": [0.45, 2.0, 1.31],
+            "xwOBAcon-MLB": [0.25, 0.9, 0.6],
+            "xwOBAcon-local": [0.3, 0.8, 0.5],
         }
     )
     weights = {
-        2025: PlateAppearanceWeights(2025, 0.70, 0.72),
-        2026: PlateAppearanceWeights(2026, 0.71, 0.73),
+        2025: WobaWeights(2025, 0.70, 0.72, 0.90, 1.30, 1.60, 2.00),
+        2026: WobaWeights(2026, 0.71, 0.73, 0.91, 1.31, 1.61, 2.01),
     }
 
     with pytest.raises(SeasonCalculationError, match="lack batted-ball matches"):
@@ -230,6 +260,9 @@ def test_validate_season_output_detects_changed_value(tmp_path: Path) -> None:
             "wOBA": [0.31],
             "xwOBA-MLB": [0.30],
             XWOBA_LOCAL_COLUMN: [0.29],
+            "wOBAcon": [0.45],
+            "xwOBAcon-MLB": [0.25],
+            "xwOBAcon-local": [0.30],
         }
     )
     reconciliation = pl.DataFrame(
@@ -239,6 +272,9 @@ def test_validate_season_output_detects_changed_value(tmp_path: Path) -> None:
             "wHBP": [0.72],
             "HBP": [1],
             "batted_ball_xwoba_sum": [0.61],
+            "batted_ball_mlb_xwoba_sum": [0.5],
+            "batted_ball_woba_sum": [0.9],
+            "batted_ball_count": [2],
             "denominator": [7],
         }
     )
