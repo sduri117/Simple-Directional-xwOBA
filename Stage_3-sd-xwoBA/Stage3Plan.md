@@ -1,6 +1,6 @@
 # Stage 3: Simple Directional xwOBA
 
-**Status:** Milestone 5 complete and awaiting review as of October 25, 2026.
+**Status:** Milestone 6 complete and awaiting review as of October 25, 2026.
 
 ## Goal
 
@@ -219,6 +219,23 @@ sd-xwOBAcon = sum(batted-ball sd-xwOBA) / batted-ball count
 Append `sd-xwOBA` and `sd-xwOBAcon` to
 `Calculated-xwOBAs/SeasonLevelCalculatedxwOBA.csv` without changing existing
 values.
+
+The completed qualified-season output contains:
+
+| Year | Qualified seasons | Metric | Minimum | Mean | Maximum |
+| --- | ---: | --- | ---: | ---: | ---: |
+| 2025 | 145 | sd-xwOBA | 0.276524 | 0.338759 | 0.445439 |
+| 2025 | 145 | sd-xwOBAcon | 0.298790 | 0.394437 | 0.569793 |
+| 2026 | 135 | sd-xwOBA | 0.262548 | 0.333271 | 0.442353 |
+| 2026 | 135 | sd-xwOBAcon | 0.270965 | 0.384534 | 0.520858 |
+
+All 280 player-season keys are unique and matched both the qualified-season
+source and a batted-ball aggregate. The existing nine columns and their row
+order were preserved exactly, with only `sd-xwOBA` and `sd-xwOBAcon` appended.
+An independent reconstruction from qualified plate appearances, annual
+coefficients, and saved batted-ball values reproduced every saved Stage 3 value
+exactly (maximum absolute difference zero). Both new columns contain only finite
+values, and no `.part` file remained.
 
 ## Correlations and plots
 
