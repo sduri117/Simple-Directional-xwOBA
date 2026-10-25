@@ -1,6 +1,6 @@
 # Stage 3: Simple Directional xwOBA
 
-**Status:** Milestone 4 complete and awaiting review as of October 24, 2026.
+**Status:** Milestone 5 complete and awaiting review as of October 25, 2026.
 
 ## Goal
 
@@ -188,6 +188,21 @@ sd-xwOBA =
 
 Use coefficients from the matching season. Preserve every existing batted-ball
 column and row, then append `sd-xwOBA` to the existing calculated annual files.
+
+The completed batted-ball outputs contain:
+
+| Year | Rows | Columns | Minimum sd-xwOBA | Maximum sd-xwOBA | Mean sd-xwOBA |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 2025 | 123,890 | 12 | 0.000000 | 2.036947 | 0.378042 |
+| 2026 | 123,381 | 12 | 0.000000 | 2.048946 | 0.367607 |
+
+Both outputs preserve all 11 preceding columns, every preceding value, and the
+original row order, with only `sd-xwOBA` appended. An independent reconstruction
+loaded the saved model directly, generated fresh probabilities for every row,
+and reapplied the matching season coefficients without importing the Stage 3
+calculation functions. It agreed with both saved `sd-xwOBA` columns exactly
+(maximum absolute difference zero). Every probability row summed to one within
+`2.22e-16`, all calculated values were finite, and no `.part` files remained.
 
 For each qualified player-season, calculate:
 

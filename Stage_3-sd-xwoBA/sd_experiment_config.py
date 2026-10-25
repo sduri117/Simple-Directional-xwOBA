@@ -41,6 +41,30 @@ CLASS_LABELS: Final[tuple[int, ...]] = (0, 1, 2, 3, 4)
 XWOBA_LOCAL_COLUMN: Final[str] = "xwOBA-local"
 SD_XWOBA_COLUMN: Final[str] = "sd-xwOBA"
 SD_XWOBA_CONTACT_COLUMN: Final[str] = "sd-xwOBAcon"
+BATTED_BALL_COLUMNS: Final[tuple[str, ...]] = (
+    "game_date",
+    "player_name",
+    "batter",
+    "events",
+    "launch_speed",
+    "launch_angle",
+    "xwOBA-MLB",
+    "hit_direction",
+    "simplified_events",
+    "total_bases",
+)
+BATTED_BALL_SCHEMA: Final[dict[str, type[pl.DataType]]] = {
+    "game_date": pl.String,
+    "player_name": pl.String,
+    "batter": pl.Int64,
+    "events": pl.String,
+    "launch_speed": pl.Float64,
+    "launch_angle": pl.Float64,
+    "xwOBA-MLB": pl.Float64,
+    "hit_direction": pl.String,
+    "simplified_events": pl.String,
+    "total_bases": pl.Int64,
+}
 
 MODELING_REQUIRED_COLUMNS: Final[tuple[str, ...]] = (
     DATE_COLUMN,

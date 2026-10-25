@@ -64,6 +64,7 @@ known-first-party = [
     "data_preprocessing",
     "calculate_batted_ball_xwoba",
     "calculate_season_xwoba",
+    "calculate_batted_ball_sd_xwoba",
     "experiment_config",
     "model_evaluation",
     "sd_experiment_config",
