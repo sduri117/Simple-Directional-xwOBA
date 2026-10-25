@@ -1,6 +1,6 @@
 # Stage 3: Simple Directional xwOBA
 
-**Status:** Milestone 6 complete and awaiting review as of October 25, 2026.
+**Status:** Stage 3 complete and awaiting final review as of October 25, 2026.
 
 ## Goal
 
@@ -255,6 +255,42 @@ Preserve all Stage 2 correlation rows and append signed Pearson `r` and
 Create plots for the player-season comparisons and, specifically, both
 year-to-year comparisons over the expected 80-player matched cohort. Each plot
 will show the fitted line, sample size, signed Pearson `r`, and `R^2`.
+
+The existing 18 Stage 2 rows were preserved exactly and the following 17 Stage
+3 rows were appended to `Calculated-xwOBAs/CorrelationResults.csv`:
+
+| Level | Comparison | Cohort | n | Pearson r | Pearson R^2 |
+| --- | --- | --- | ---: | ---: | ---: |
+| Batted ball | sd-xwOBA vs MLB | 2025 | 123,890 | 0.919791 | 0.846016 |
+| Batted ball | sd-xwOBA vs MLB | 2026 | 123,381 | 0.920759 | 0.847798 |
+| Batted ball | sd-xwOBA vs MLB | Combined | 247,271 | 0.920171 | 0.846714 |
+| Batted ball | sd-xwOBA vs local | 2025 | 123,890 | 0.928301 | 0.861742 |
+| Batted ball | sd-xwOBA vs local | 2026 | 123,381 | 0.924908 | 0.855455 |
+| Batted ball | sd-xwOBA vs local | Combined | 247,271 | 0.926644 | 0.858669 |
+| Player season | sd-xwOBA vs MLB | 2025 | 145 | 0.965415 | 0.932025 |
+| Player season | sd-xwOBA vs MLB | 2026 | 135 | 0.950974 | 0.904352 |
+| Player season | sd-xwOBA vs MLB | Combined | 280 | 0.957035 | 0.915915 |
+| Player season | sd-xwOBA vs local | 2025 | 145 | 0.975008 | 0.950641 |
+| Player season | sd-xwOBA vs local | 2026 | 135 | 0.966433 | 0.933993 |
+| Player season | sd-xwOBA vs local | Combined | 280 | 0.971102 | 0.943038 |
+| Contact value | sd-xwOBA vs realized | 2025 | 123,890 | 0.718285 | 0.515934 |
+| Contact value | sd-xwOBA vs realized | 2026 | 123,381 | 0.721507 | 0.520572 |
+| Contact value | sd-xwOBA vs realized | Combined | 247,271 | 0.719766 | 0.518063 |
+| Year to year | 2025 sd-xwOBA vs 2026 wOBA | Matched qualifiers | 80 | 0.280140 | 0.078478 |
+| Year to year contact | 2025 sd-xwOBAcon vs 2026 wOBAcon | Matched qualifiers | 80 | 0.611667 | 0.374136 |
+
+Four completed plots are saved in `Calculated-xwOBAs/plots`:
+
+- `player_season_sd_xwoba_vs_mlb.png`
+- `player_season_sd_xwoba_vs_local.png`
+- `year1_sd_xwoba_vs_year2_woba.png`
+- `year1_sd_xwobacon_vs_year2_wobacon.png`
+
+All four were visually inspected for legibility, fitted lines, cohort sizes, and
+statistics. An independent NumPy and Polars reconstruction that did not import
+the Stage 3 analysis functions reproduced all 17 signed `r` and `R^2` values to
+a maximum absolute difference of `1.11e-16` and independently confirmed the
+80-player matched cohort. No temporary analysis or plot files remained.
 
 ## Code organization
 

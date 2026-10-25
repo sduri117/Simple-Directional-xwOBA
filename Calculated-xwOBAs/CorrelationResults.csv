@@ -17,3 +17,20 @@ year_to_year_contact,2025 xwOBAcon-MLB vs 2026 wOBAcon,qualified in 2025 and 202
 year_to_year_contact,2025 xwOBAcon-local vs 2026 wOBAcon,qualified in 2025 and 2026,2025 xwOBAcon-local,2026 wOBAcon,80,0.6095731315697537,0.3715794027317562
 year_to_year_realized,2025 wOBA vs 2026 wOBA,qualified in 2025 and 2026,2025 wOBA,2026 wOBA,80,0.2668178408349066,0.07119176018780156
 year_to_year_realized,2025 wOBAcon vs 2026 wOBAcon,qualified in 2025 and 2026,2025 wOBAcon,2026 wOBAcon,80,0.6111259213964152,0.37347489180261745
+batted_ball,sd-xwOBA vs xwOBA-MLB,2025,sd-xwOBA,xwOBA-MLB,123890,0.9197912998010002,0.8460160351896133
+batted_ball,sd-xwOBA vs xwOBA-MLB,2026,sd-xwOBA,xwOBA-MLB,123381,0.9207593107067277,0.8477977082531283
+batted_ball,sd-xwOBA vs xwOBA-MLB,2025-2026 combined,sd-xwOBA,xwOBA-MLB,247271,0.920170819715051,0.8467143374550689
+batted_ball,sd-xwOBA vs xwOBA-local,2025,sd-xwOBA,xwOBA-local,123890,0.9283005315455909,0.8617418768678266
+batted_ball,sd-xwOBA vs xwOBA-local,2026,sd-xwOBA,xwOBA-local,123381,0.9249082038490525,0.8554551855472804
+batted_ball,sd-xwOBA vs xwOBA-local,2025-2026 combined,sd-xwOBA,xwOBA-local,247271,0.9266436914079431,0.8586685308261394
+player_season,sd-xwOBA vs xwOBA-MLB,2025,sd-xwOBA,xwOBA-MLB,145,0.9654145283002858,0.9320252114532634
+player_season,sd-xwOBA vs xwOBA-MLB,2026,sd-xwOBA,xwOBA-MLB,135,0.9509740870781773,0.9043517142941728
+player_season,sd-xwOBA vs xwOBA-MLB,2025-2026 combined,sd-xwOBA,xwOBA-MLB,280,0.9570346489588915,0.9159153193078686
+player_season,sd-xwOBA vs xwOBA-local,2025,sd-xwOBA,xwOBA-local,145,0.9750083630031265,0.9506413079260366
+player_season,sd-xwOBA vs xwOBA-local,2026,sd-xwOBA,xwOBA-local,135,0.9664331104314413,0.9339929569381904
+player_season,sd-xwOBA vs xwOBA-local,2025-2026 combined,sd-xwOBA,xwOBA-local,280,0.9711016475260467,0.9430384098278022
+batted_ball_contact_value,realized wOBA value vs sd-xwOBAcon,2025,sd-xwOBAcon,realized wOBA value,123890,0.71828547144372,0.5159340184871272
+batted_ball_contact_value,realized wOBA value vs sd-xwOBAcon,2026,sd-xwOBAcon,realized wOBA value,123381,0.7215068729792877,0.5205721677563501
+batted_ball_contact_value,realized wOBA value vs sd-xwOBAcon,2025-2026 combined,sd-xwOBAcon,realized wOBA value,247271,0.719766204427686,0.5180633890362375
+year_to_year,2025 sd-xwOBA vs 2026 wOBA,qualified in 2025 and 2026,2025 sd-xwOBA,2026 wOBA,80,0.2801397278497203,0.07847826711971535
+year_to_year_contact,2025 sd-xwOBAcon vs 2026 wOBAcon,qualified in 2025 and 2026,2025 sd-xwOBAcon,2026 wOBAcon,80,0.6116667125968412,0.37413616729902677

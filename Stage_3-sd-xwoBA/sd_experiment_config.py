@@ -118,6 +118,12 @@ CORRELATION_RESULTS_PATH: Final[Path] = (
     CALCULATED_XWOBA_DIRECTORY / "CorrelationResults.csv"
 )
 PLOTS_DIRECTORY: Final[Path] = CALCULATED_XWOBA_DIRECTORY / "plots"
+SD_VS_MLB_PLAYER_SEASON_PLOT_PATH: Final[Path] = (
+    PLOTS_DIRECTORY / "player_season_sd_xwoba_vs_mlb.png"
+)
+SD_VS_LOCAL_PLAYER_SEASON_PLOT_PATH: Final[Path] = (
+    PLOTS_DIRECTORY / "player_season_sd_xwoba_vs_local.png"
+)
 SD_YEAR_AHEAD_PLOT_PATH: Final[Path] = (
     PLOTS_DIRECTORY / "year1_sd_xwoba_vs_year2_woba.png"
 )
