@@ -1,7 +1,6 @@
 # Stage 3: Simple Directional xwOBA
 
-**Status:** Milestone 3 complete and awaiting model selection as of October 24,
-2026.
+**Status:** Milestone 4 complete and awaiting review as of October 24, 2026.
 
 ## Goal
 
@@ -163,6 +162,19 @@ After selection, refit the complete preprocessing-and-model pipeline on all
 
 - `ModelArtifacts/sd_xwoba_knn_2022_2024.joblib`
 - `ModelArtifacts/sd_xwoba_knn_2022_2024.metadata.json`
+
+The user selected robust numeric scaling with 1,000 neighbors, uniform weights,
+Euclidean distance, and the benchmark-selected ball-tree algorithm. The final
+pipeline was fitted on all 370,161 batted balls and saved to the two paths
+above. The model SHA-256 is
+`afab1691fbe5ad8ae9a976aea8d036e9ef3efa5b69e320b29be08246f9e3356f`.
+
+The metadata records the raw and transformed feature order, the fixed direction
+category order, selected configuration, class order, training years and row
+count, seed, validation metrics, software versions, input checksums, and model
+checksum. An independent reload validated the complete pipeline contract and
+produced valid five-class probabilities for a deterministic sample of 257 rows;
+the maximum probability-row sum error was `2.22e-16`.
 
 For each 2025 and 2026 batted ball, calculate:
 

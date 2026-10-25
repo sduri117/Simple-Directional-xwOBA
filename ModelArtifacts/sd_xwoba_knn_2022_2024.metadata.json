@@ -1,0 +1,70 @@
+{
+  "class_order": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "direction_categories": [
+    "pull",
+    "straightaway",
+    "opposite"
+  ],
+  "input_sha256": {
+    "ProcessedData/2022_all_BBE.csv": "3c1ae3f2a6f66fdcdb9026aebaf098aeeda46655b4e0e86d7b356e7056505c5e",
+    "ProcessedData/2023_all_BBE.csv": "7653b4d2b5e1c947208d4e09bcb446cfb98af123bab665a08a720d17445f7e00",
+    "ProcessedData/2024_all_BBE.csv": "1987cc4bf085cec0bd25c4a78c36d0bbbf15d6db3ac565413366d214642d15bf"
+  },
+  "model_family": "KNeighborsClassifier",
+  "model_sha256": "afab1691fbe5ad8ae9a976aea8d036e9ef3efa5b69e320b29be08246f9e3356f",
+  "numeric_feature_columns": [
+    "launch_speed",
+    "launch_angle"
+  ],
+  "random_seed": 99,
+  "raw_feature_columns": [
+    "launch_speed",
+    "launch_angle",
+    "hit_direction"
+  ],
+  "schema_version": 1,
+  "selected_configuration": {
+    "metric": "minkowski",
+    "n_jobs": -1,
+    "n_neighbors": 1000,
+    "neighbor_algorithm": "ball_tree",
+    "numeric_feature_scaling": "robust",
+    "p": 2,
+    "weights": "uniform"
+  },
+  "software_versions": {
+    "joblib": "1.6.0",
+    "numpy": "2.5.4",
+    "polars": "2.0.0",
+    "python": "3.13.9",
+    "scikit-learn": "1.9.1"
+  },
+  "target_column": "total_bases",
+  "training_row_count": 370161,
+  "training_years": [
+    2022,
+    2023,
+    2024
+  ],
+  "transformed_feature_columns": [
+    "launch_speed",
+    "launch_angle",
+    "hit_direction_pull",
+    "hit_direction_straightaway",
+    "hit_direction_opposite"
+  ],
+  "validation_metrics": {
+    "chronological_accuracy": 0.7889788541185434,
+    "chronological_brier_score": 0.2985086345061233,
+    "chronological_log_loss": 0.5391981853442623,
+    "cv_accuracy": 0.7886757383949147,
+    "cv_brier_score": 0.29869844698388,
+    "cv_log_loss": 0.5378433518688378
+  }
+}

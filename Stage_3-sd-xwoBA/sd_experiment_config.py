@@ -140,6 +140,14 @@ def generate_knn_configs() -> tuple[KNNConfig, ...]:
 KNN_CONFIGS: Final[tuple[KNNConfig, ...]] = generate_knn_configs()
 KNN_CANDIDATE_COUNT: Final[int] = 96
 TOTAL_CANDIDATE_COUNT: Final[int] = KNN_CANDIDATE_COUNT + 1
+SELECTED_MODEL_CONFIG: Final[KNNConfig] = KNNConfig(
+    scaling="robust",
+    n_neighbors=1000,
+    weights="uniform",
+    p=2,
+)
+SELECTED_NEIGHBOR_ALGORITHM: Final[str] = "ball_tree"
+FINAL_TRAINING_ROW_COUNT: Final[int] = 370_161
 
 
 def annual_batted_ball_path(year: int) -> Path:
