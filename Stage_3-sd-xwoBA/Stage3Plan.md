@@ -1,6 +1,6 @@
 # Stage 3: Simple Directional xwOBA
 
-**Status:** Milestone 1 complete and awaiting review as of October 24, 2026.
+**Status:** Milestone 2 complete and awaiting review as of October 24, 2026.
 
 ## Goal
 
@@ -223,6 +223,22 @@ tests/
   controls.
 - Add focused unit and integration tests.
 - Run the full quality gate, then pause for review.
+
+The completed implementation validates and combines all 370,161 training rows
+while retaining the raw Polars feature frame until preprocessing occurs inside
+each fitted pipeline. Cross-validation indexes the raw rows before fitting the
+preprocessor, and chronological validation fits preprocessing only on 2022–2023
+before transforming 2024.
+
+The evaluation command implements the fold-specific frequency baseline, all 96
+configured KNN pipelines, explicit five-class probability alignment, log loss,
+summed multiclass Brier score, accuracy, neighbor-search benchmarking, atomic
+per-candidate checkpoints, safe resume behavior, and command-line controls. A
+full-data smoke test reproduced the Stage 2 baseline metrics, as expected
+because the baseline does not use model features. On the fixed 5,000-training
+row and 500-query benchmark sample, all three algorithms produced equivalent
+probabilities and `kd_tree` was fastest; Milestone 3 will perform and record the
+benchmark as part of the actual experiment checkpoint.
 
 ### Milestone 3: Full model-selection experiment
 

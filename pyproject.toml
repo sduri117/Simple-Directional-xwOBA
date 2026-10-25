@@ -68,6 +68,7 @@ known-first-party = [
     "model_evaluation",
     "sd_experiment_config",
     "sd_feature_pipeline",
+    "sd_model_evaluation",
     "train_final_model",
 ]
 
