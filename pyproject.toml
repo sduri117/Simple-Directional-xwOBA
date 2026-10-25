@@ -27,14 +27,27 @@ line-length = 88
 target-version = ["py313"]
 
 [tool.mypy]
-files = ["Stage_1-Preprocessing", "Stage_2-xwOBA-local", "tests"]
-mypy_path = ["Stage_1-Preprocessing", "Stage_2-xwOBA-local"]
+files = [
+    "Stage_1-Preprocessing",
+    "Stage_2-xwOBA-local",
+    "Stage_3-sd-xwoBA",
+    "tests",
+]
+mypy_path = [
+    "Stage_1-Preprocessing",
+    "Stage_2-xwOBA-local",
+    "Stage_3-sd-xwoBA",
+]
 python_version = "3.13"
 strict = true
 
 [tool.pytest.ini_options]
 addopts = "-ra"
-pythonpath = ["Stage_1-Preprocessing", "Stage_2-xwOBA-local"]
+pythonpath = [
+    "Stage_1-Preprocessing",
+    "Stage_2-xwOBA-local",
+    "Stage_3-sd-xwoBA",
+]
 testpaths = ["tests"]
 
 [tool.ruff]
@@ -53,6 +66,8 @@ known-first-party = [
     "calculate_season_xwoba",
     "experiment_config",
     "model_evaluation",
+    "sd_experiment_config",
+    "sd_feature_pipeline",
     "train_final_model",
 ]
 
