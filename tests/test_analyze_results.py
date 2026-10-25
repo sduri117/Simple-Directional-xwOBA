@@ -150,7 +150,7 @@ def test_build_correlation_results_creates_all_results() -> None:
     results, matched = build_correlation_results(batted_ball_frames(), season_frame())
 
     assert results.columns == list(RESULT_COLUMNS)
-    assert results.height == 16
+    assert results.height == 18
     assert matched["batter_id"].to_list() == [10, 20]
     assert results.group_by("analysis_level").len().sort(
         "analysis_level"
@@ -160,6 +160,7 @@ def test_build_correlation_results_creates_all_results() -> None:
         {"analysis_level": "player_season", "len": 3},
         {"analysis_level": "year_to_year", "len": 2},
         {"analysis_level": "year_to_year_contact", "len": 2},
+        {"analysis_level": "year_to_year_realized", "len": 2},
     ]
     np.testing.assert_allclose(
         results["r_squared"].to_numpy(),
@@ -183,7 +184,7 @@ def test_analyze_writes_validated_results_and_plots(tmp_path: Path) -> None:
         local_year_ahead_plot_path=plots[2],
     )
 
-    assert summary.result_rows == 16
+    assert summary.result_rows == 18
     assert summary.matched_players == 2
     results = pl.read_csv(results_path)
     assert results.columns == list(RESULT_COLUMNS)

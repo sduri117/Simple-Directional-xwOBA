@@ -15,3 +15,5 @@ year_to_year,2025 xwOBA-MLB vs 2026 wOBA,qualified in 2025 and 2026,2025 xwOBA-M
 year_to_year,2025 xwOBA-local vs 2026 wOBA,qualified in 2025 and 2026,2025 xwOBA-local,2026 wOBA,80,0.2984694240271299,0.08908399707908667
 year_to_year_contact,2025 xwOBAcon-MLB vs 2026 wOBAcon,qualified in 2025 and 2026,2025 xwOBAcon-MLB,2026 wOBAcon,80,0.6181150141245288,0.3820661706861665
 year_to_year_contact,2025 xwOBAcon-local vs 2026 wOBAcon,qualified in 2025 and 2026,2025 xwOBAcon-local,2026 wOBAcon,80,0.6095731315697537,0.3715794027317562
+year_to_year_realized,2025 wOBA vs 2026 wOBA,qualified in 2025 and 2026,2025 wOBA,2026 wOBA,80,0.2668178408349066,0.07119176018780156
+year_to_year_realized,2025 wOBAcon vs 2026 wOBAcon,qualified in 2025 and 2026,2025 wOBAcon,2026 wOBAcon,80,0.6111259213964152,0.37347489180261745

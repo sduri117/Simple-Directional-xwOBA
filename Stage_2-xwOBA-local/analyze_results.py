@@ -229,8 +229,10 @@ def matched_player_seasons(seasons: pl.DataFrame) -> pl.DataFrame:
     first = seasons.filter(pl.col("year") == year_one).select(
         "batter_id",
         pl.col("batter_name").alias("batter_name_2025"),
+        pl.col("wOBA").alias("wOBA_2025"),
         pl.col("xwOBA-MLB").alias("xwOBA-MLB_2025"),
         pl.col(XWOBA_LOCAL_COLUMN).alias("xwOBA-local_2025"),
+        pl.col("wOBAcon").alias("wOBAcon_2025"),
         pl.col("xwOBAcon-MLB").alias("xwOBAcon-MLB_2025"),
         pl.col("xwOBAcon-local").alias("xwOBAcon-local_2025"),
     )
@@ -377,6 +379,22 @@ def build_correlation_results(
             )
         )
 
+    for x_column, y_column, x_label, y_label in (
+        ("wOBA_2025", "wOBA_2026", "2025 wOBA", "2026 wOBA"),
+        ("wOBAcon_2025", "wOBAcon_2026", "2025 wOBAcon", "2026 wOBAcon"),
+    ):
+        records.append(
+            _result_record(
+                "year_to_year_realized",
+                f"{x_label} vs {y_label}",
+                "qualified in 2025 and 2026",
+                x_label,
+                y_label,
+                matched[x_column].to_numpy(),
+                matched[y_column].to_numpy(),
+            )
+        )
+
     result = pl.DataFrame(
         records,
         schema={
@@ -504,7 +522,7 @@ def validate_results_output(path: Path, expected: pl.DataFrame) -> None:
         raise AnalysisError(
             f"Could not validate correlation results {path}: {error}"
         ) from error
-    if actual.columns != list(RESULT_COLUMNS) or actual.height != 16:
+    if actual.columns != list(RESULT_COLUMNS) or actual.height != 18:
         raise AnalysisError("Correlation result output has an invalid shape or schema")
     if (
         actual.select(RESULT_COLUMNS[:-2]).to_dicts()

@@ -1,6 +1,6 @@
 # Stage 2: Model Selection and Calculated xwOBA
 
-**Status:** Milestone 8 complete and awaiting review as of October 24, 2026.
+**Status:** Milestone 9 complete and awaiting review as of October 24, 2026.
 
 ## Goal
 
@@ -394,8 +394,10 @@ and `R^2 = r^2`:
 | Batted ball | Combined local expected vs realized contact value | 247,271 | 0.670367 | 0.449392 |
 | Year to year | 2025 xwOBAcon-MLB vs 2026 wOBAcon | 80 | 0.618115 | 0.382066 |
 | Year to year | 2025 xwOBAcon-local vs 2026 wOBAcon | 80 | 0.609573 | 0.371579 |
+| Year to year | 2025 wOBA vs 2026 wOBA | 80 | 0.266818 | 0.071192 |
+| Year to year | 2025 wOBAcon vs 2026 wOBAcon | 80 | 0.611126 | 0.373475 |
 
-These eight rows are appended to the original eight rows in
+These ten rows are appended to the original eight rows in
 `Calculated-xwOBAs/CorrelationResults.csv`.
 
 An independent reconstruction that did not import the project calculation
@@ -403,6 +405,10 @@ functions reproduced all 280 saved contact-only player-season values exactly.
 It also reproduced the six batted-ball correlation rows exactly and the two
 year-ahead rows to a maximum absolute difference of `1.67e-16`, while
 independently confirming the 80-player matched cohort.
+
+The two realized year-to-year comparisons were also independently calculated
+from the season-level artifact. They reproduce the saved Pearson `r` and
+`R^2 = r^2` values at full stored precision.
 
 ## Code organization
 
@@ -518,6 +524,14 @@ overwrite flags.
   expected-contact versus 2026 realized-contact correlations using Pearson
   `r` and `R^2 = r^2`.
 - Regenerate and independently validate the season and correlation artifacts.
+- Run the full quality gate, then pause for review.
+
+### Milestone 9: Realized year-to-year correlations
+
+- Compare 2025 `wOBA` with 2026 `wOBA` for players qualified in both seasons.
+- Compare 2025 `wOBAcon` with 2026 `wOBAcon` for the same cohort.
+- Save signed Pearson `r` and `R^2 = r^2` alongside the prior correlations.
+- Independently validate the matched cohort and both calculations.
 - Run the full quality gate, then pause for review.
 
 ## Quality gate
